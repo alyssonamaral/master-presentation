@@ -1,0 +1,44 @@
+%========================
+% chapters/03_related_work.tex
+%========================
+\chapter{Related Work}
+\label{chap:related-work}
+
+Graph generation has been studied from several perspectives, ranging from classical random graph models to modern neural generators. This chapter reviews the literature most relevant to the dissertation, with emphasis on methods that either rely on graph-to-sequence conversion or explicitly address the ordering problem.
+
+\section{Graph Generative Models}
+\label{sec:related-graph-generative-models}
+
+Classical graph models define distributions through explicit structural assumptions. Erd\H{o}s--R\'enyi graphs model independent edge formation \cite{erdos1960evolution}, Watts--Strogatz graphs capture small-world behavior \cite{watts1998collective}, and Barab\'asi--Albert graphs model growth with preferential attachment \cite{barabasi1999emergence}. These models are useful because their assumptions are transparent, but they are limited when the target distribution contains complex motifs, constraints, attributes, or domain-specific generation rules.
+
+Neural graph generation attempts to learn such distributions from data. Variational methods encode graphs into latent variables and decode them back into graphs \cite{kipf2016vgae,simonovsky2018graphvae}; adversarial methods train a generator against a discriminator \cite{goodfellow2014generative,bojchevski2018netgan}; flow-based models define invertible transformations for graph objects \cite{shi2020graphaf}; and diffusion models generate graphs through iterative denoising \cite{vignac2023digress,chen2023edge}. These approaches differ in how they handle permutation invariance, discrete structure, and validity constraints, but they share the general goal of learning a graph distribution without explicitly hand-designing a random graph model for each domain.
+
+Autoregressive generators form a particularly relevant branch because they construct graphs through sequences of local decisions. DGMG generates graphs by repeatedly deciding whether to add a node, add an edge, and choose a destination \cite{li2018learning}. GraphRNN decomposes graph generation into a node sequence and edge sequences conditioned on previous nodes \cite{you2018graphrnn}. GRAN improves scalability with recurrent attention and block-wise generation \cite{liao2020gran}. Edge-based recurrent models also build graphs through sequential edge decisions \cite{bacciu2019edgegraphgen}. These models are expressive and naturally support constructive constraints, but they expose the ordering problem directly: before training, the graph must be represented as an ordered object.
+
+\section{The Ordering Problem in Autoregressive Generation}
+\label{sec:related-ordering-problem}
+
+The dependence of autoregressive graph models on node order has motivated a growing body of work. Chen et al. formalize the role of node sequence in graph generation and show that order matters probabilistically \cite{chen2021ordermatters}. Bu et al. argue that ordering should not be treated as a secondary detail and analyze how different orderings affect autoregressive graph generation \cite{bu2023let}. Other approaches attempt to overcome ordering by marginalizing, augmenting, or modifying the factorization over orderings \cite{cohenkarlik2024olr,wang2025loarm}. Transformer-based graph generators also revisit sequence design, since attention can model long-range dependencies but still requires a representation of the graph as tokens or construction actions \cite{zhao2023graphgpt,chen2025g2pt}.
+
+The present dissertation is aligned with this literature but takes a specific position. Instead of trying to remove the ordering dependency, it treats ordering as an optimization variable. This is motivated by the empirical observation that orderings can be beneficial when they match the topology of the target family. A BFS ordering can simplify tree generation, a DFS-like ordering can simplify cycles, and a degree ordering can simplify stars. In this view, the problem is not merely that orderings introduce nuisance variation; it is also that a good ordering can be a useful structural prior.
+
+\section{Deterministic Ordering Heuristics}
+\label{sec:related-heuristics}
+
+Deterministic ordering heuristics are widely used because they are simple, reproducible, and inexpensive compared with model training. Breadth-first search and depth-first search are classical traversals \cite{cormen2009introduction}. Degeneracy ordering, also known as smallest-last ordering, repeatedly removes low-degree vertices and is connected to sparsity structure \cite{matula1983smallestlast}. Maximum cardinality search selects vertices according to how many already selected neighbors they have and is historically linked to sparse matrix factorization and chordal graph recognition \cite{rose1976algorithmic}. Spectral ordering uses eigenvectors of graph matrices to impose a global one-dimensional layout, drawing on spectral graph theory \cite{fiedler1973algebraic}.
+
+These heuristics are not equivalent from the perspective of an autoregressive generator. A traversal ordering emphasizes reachability and local expansion; a degree ordering emphasizes hub exposure; degeneracy emphasizes sparse cores; and spectral ordering emphasizes global geometry. The dissertation uses these heuristics as controlled interventions: the generator architecture remains fixed, while the ordering changes. This makes it possible to isolate the effect of the graph-to-sequence map.
+
+\section{Learning to Order}
+\label{sec:related-learning-order}
+
+Learning an ordering is more difficult than selecting a deterministic heuristic because the space of permutations is discrete and combinatorial. The order of $n$ nodes contains $n!$ possibilities, and the usefulness of a partial ordering may only become visible after the full graph has been translated, the generator has been trained, and samples have been evaluated. This makes the problem naturally related to sequential decision-making.
+
+Reinforcement learning has been used for combinatorial optimization and sequencing tasks because it can optimize policies through delayed rewards \cite{sutton2018reinforcement}. Policy-gradient methods are especially appropriate when the action space is discrete and the reward cannot be differentiated with respect to the decisions \cite{williams1992reinforce}. In the context of this dissertation, selecting an ordering is treated as a graph-conditioned trajectory. The policy receives the graph and the set of already selected nodes, chooses the next node, and continues until all nodes have been selected. The reward is based on downstream DGMG behavior. This differs from supervised ordering prediction because there is no unique ground-truth ordering; the best ordering is defined by its effect on the generator.
+
+The use of attention in the final policy architecture is also motivated by developments in neural sequence modeling and graph representation learning. Attention mechanisms allow a model to weight context elements differently \cite{vaswani2017attention}, and graph attention extends this idea to neighborhoods \cite{velickovic2018gat}. In the learned-ordering problem, attention is useful because different nodes may become relevant at different stages of the ordering trajectory. Early choices may benefit from hub information, while later choices may depend more strongly on frontier structure or remaining-node connectivity.
+
+\section{Position of This Dissertation}
+\label{sec:related-position}
+
+The dissertation contributes to ordering-aware graph generation in three ways. First, it provides a topology-dependent empirical study of deterministic orderings under a fixed autoregressive model generator. Second, it formulates learned ordering as a graph-conditioned reinforcement-learning problem rather than as a supervised ranking problem. Third, it evaluates a stronger attention-based policy on Barab\'asi--Albert graphs and shows that learned ordering can improve the trade-off among size validity, connectivity, and hub-related statistics. The central perspective is that ordering should be studied as part of the model, because the sequence presented to an autoregressive generator is one of the main determinants of what the generator can learn efficiently.

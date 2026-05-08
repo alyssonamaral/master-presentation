@@ -1,0 +1,230 @@
+%========================
+% chapters/06_rl_ordering.tex
+%========================
+\chapter{Learning Node Orderings with Deep Reinforcement Learning}
+\label{chap:rl-ordering}
+
+This chapter presents the main methodological contribution of the dissertation. The deterministic study shows that node ordering can strongly change DGMG performance and that different topologies favor different orderings. The natural next step is to remove the requirement that the ordering be fixed by hand. The proposed method treats node ordering as a graph-conditioned sequential decision problem and trains a policy to construct orderings that improve the downstream graph generator.
+
+\section{Problem Formulation}
+\label{sec:rl-problem-formulation}
+
+Let $\mathcal{D}$ be a dataset of graphs. For each graph $G\in\mathcal{D}$, the set of possible orderings is $\mathcal{O}_G$. A deterministic heuristic selects a single ordering $\sigma=h(G)$. In contrast, the learned method defines a stochastic policy $\pi_\theta(\sigma\mid G)$ over complete orderings. Once an ordering is sampled, the translator produces an action sequence $\mathcal{T}(G,\sigma)$, and DGMG is trained on that sequence.
+
+The ideal objective would select policy parameters $\theta$ that minimize downstream generation loss after the generator has been trained under the policy-induced sequences. This yields a bilevel view of the problem. Let $\phi$ denote the generator parameters. In the lower-level task, for a given policy $\pi_\theta$, we seek the optimal generator parameters $\phi^\star(\theta)$ that minimize the expected training loss over the distribution of orderings:
+\begin{equation}
+    \phi^\star(\theta) = \arg\min_{\phi} \;\mathbb{E}_{G\sim\mathcal{D}}\left[\mathbb{E}_{\sigma\sim\pi_\theta(\cdot\mid G)}\left[\mathcal{L}_{\mathrm{NLL}}\!\left(\phi,\mathcal{T}(G,\sigma)\right)\right]\right].
+    \label{eq:bilevel-phi}
+\end{equation}
+The optimal policy parameters $\theta^\star$ are found by solving the upper-level task to maximize the expected downstream reward $R$, evaluated at the lower-level equilibrium $\phi^\star(\theta)$:
+\begin{equation}
+    \theta^\star = \arg\max_{\theta} \;\mathbb{E}_{G\sim\mathcal{D}}\left[\mathbb{E}_{\sigma\sim\pi_\theta(\cdot\mid G)}\left[R\bigl(G,\sigma,\phi^\star(\theta)\bigr)\right]\right],
+    \label{eq:bilevel-theta}
+\end{equation}
+where $R(G,\sigma,\phi)$ is a delayed reward that evaluates the ordering $\sigma$ against the current generator state $\phi$.
+
+Solving Eq.~\eqref{eq:bilevel-phi} to convergence for every update of $\theta$ is computationally prohibitive. Therefore, we adopt an alternating optimization strategy, detailed in Section~\ref{sec:rl-alternating-optimization}, in which the generator and the ordering policy are updated in interleaved stages, effectively performing stochastic gradient steps on both levels.
+
+This design reflects the fact that the ordering is valuable only through its effect on the generator. There is no ground-truth label saying which ordering is correct. An ordering is good if it makes the sequential learning problem easier and leads to better samples.
+
+\section{Markov Decision Process}
+\label{sec:rl-mdp}
+
+The ordering process is formulated as a finite-horizon Markov Decision Process defined
+through the tuple $(\mathcal{S}, \mathcal{A}, \mathcal{P}, \mathcal{R}, \gamma)$, where
+$\mathcal{S}$ is the state space, $\mathcal{A}$ is the action space, $\mathcal{P}$ is the
+state transition function, $\mathcal{R}$ is the reward function, and $\gamma \in [0,1]$
+is the discount factor that controls how much future rewards are weighted relative to
+immediate ones. Since the task is episodic and finite, we assume $\gamma = 1$, meaning
+all steps in the trajectory contribute equally to the cumulative reward, keeping the
+objective focused on the quality of the complete ordering rather than on any intermediate
+decision in isolation.
+
+At the beginning of an episode, the input graph $G=(V,E)$ is fixed and the selected set is empty. At step $t$, the state is
+\begin{equation}
+    s_t=(G,S_t),
+\end{equation}
+where $S_t\subseteq V$ is the set of nodes already selected. The action space is the set of remaining nodes,
+\begin{equation}
+    \mathcal{A}(s_t)=V\setminus S_t.
+\end{equation}
+After the policy selects $u_t\in\mathcal{A}(s_t)$, the state transitions deterministically to $S_{t+1}=S_t\cup\{u_t\}$. The episode ends after $n$ steps, producing the ordering $\sigma=(u_1,\ldots,u_n)$.
+
+The probability of a complete ordering under the policy is
+\begin{equation}
+    \pi_\theta(\sigma\mid G)
+    = \prod_{t=1}^{n}\pi_\theta(u_t\mid G,S_t),
+\end{equation}
+where invalid actions are masked so that already selected nodes cannot be chosen again.
+
+The reward is defined at the trajectory level. An episode terminates once all nodes have been selected. At termination, we obtain a valid node permutation $\sigma=(a_1,\ldots,a_n)$ defined by the sequence of actions in $\tau$. Let $\phi$ denote the current DGMG parameters after a generator-update stage using sequences induced by the policy. The step-wise reward component is defined as
+\begin{equation}
+    \mathcal{R}(s_t,a_t) = \log p_\phi(a_t \mid a_{<t}),
+\end{equation}
+noting that $s_t$ implicitly contains the information of the previous decisions $a_{<t}$.
+
+A central design principle of the method is that an ordering should not be rewarded in isolation. Instead, the reward must reflect the quality of the downstream generator trained under that ordering. The trajectory return $R(\tau)$ is therefore defined as a combination of predictive fit $R_{\mathrm{pred}}(\tau)$ and structural validity $R_{\mathrm{struct}}(\tau)$. This avoids optimizing the policy for spurious sequence patterns by tying the objective to both likelihood and graph-level structural fidelity.
+
+The predictive term is defined as follows. Given a graph $G$ and a permutation $\sigma$, the validation loss is
+\begin{equation}
+    \mathcal{L}_{\mathrm{val}}(\phi,\mathcal{T}(G,\sigma))
+    = -\sum_{t=1}^{n}\log p_\phi(a_t\mid a_{<t}).
+\end{equation}
+Let $\mathcal{D}_{\mathrm{val}}=\{G^{(i)}\}_{i=1}^{|\mathcal{D}_{\mathrm{val}}|}$ be the validation set. The average validation loss is
+\begin{equation}
+    \overline{\mathcal{L}}_{\mathrm{val}}(\tau)
+    = \frac{1}{|\mathcal{D}_{\mathrm{val}}|}\sum_{i=1}^{|\mathcal{D}_{\mathrm{val}}|}\mathcal{L}_{\mathrm{val}}\!\left(\phi,\mathcal{T}(G^{(i)},\sigma)\right).
+\end{equation}
+Since lower values of $\overline{\mathcal{L}}_{\mathrm{val}}$ are better, the predictive reward is its negative value:
+\begin{equation}
+    R_{\mathrm{pred}}(\tau)
+    = -\overline{\mathcal{L}}_{\mathrm{val}}(\tau)
+    = \frac{1}{|\mathcal{D}_{\mathrm{val}}|}\sum_{i=1}^{|\mathcal{D}_{\mathrm{val}}|}\sum_{t=1}^{n}\log p_\phi(a_t\mid a_{<t}).
+\end{equation}
+
+The structural term $R_{\mathrm{struct}}(\tau)$ is tailored to the graph family of interest. To estimate it, candidate graphs are sampled from the current DGMG model and evaluated using a family-specific validity predicate. In the Barab\'asi--Albert setting, this structural component incorporates size control, connectivity, and distributional statistics related to scale-free behavior, including degree inequality and hub concentration. In this way, the policy is encouraged not only to improve predictive fit, but also to induce orderings that support the recovery of the characteristic heavy-tailed structure of BA graphs.
+
+The final composite reward is
+\begin{equation}
+    R(\tau) = R_{\mathrm{pred}}(\tau) + \lambda\,R_{\mathrm{struct}}(\tau),
+    \label{eq:reward-composite}
+\end{equation}
+where $\lambda>0$ controls the trade-off between predictive fit and structural validity. To make the dependency explicit, we write $R(\tau)\equiv R(G,\sigma,\phi)$, since the trajectory $\tau$ defines a node permutation $\sigma$ whose quality depends on the input graph $G$ and on the generator parameters $\phi$ used to evaluate it.
+
+The reward is delayed and assigned only after the complete ordering has been translated and evaluated through the generator. This delayed reward is the main reason for using policy gradients rather than ordinary backpropagation through the ordering decisions.
+
+\section{Policy Architecture}
+\label{sec:rl-policy-architecture}
+
+The policy must choose a node while considering both the original graph and the partial ordering. The architecture therefore computes node embeddings with graph message passing and augments them with a selected-node indicator. In the final method, the encoder uses multiple graph layers and an attention mechanism. The additional layers increase the receptive field of each node, while attention allows the policy to weight neighboring signals differently depending on the current graph structure. This makes the architecture especially suited to graphs with heterogeneous local influence patterns, such as Barab\'asi--Albert networks with hubs and long-tailed degree distributions.
+
+Let $x_v$ be the input feature vector for node $v$. In the synthetic setting, node features are lightweight and may include structural descriptors such as normalized degree together with a binary indicator showing whether the node has already been selected. Given state $s_t=(G,S_t)$, the graph encoder computes node embeddings
+\begin{equation}
+    h_v^{(T_\sigma)} = \mathrm{GNN}_\theta(G,S_t,x_v),
+\end{equation}
+where $T_\sigma$ denotes the number of message-passing rounds used by the policy network. A graph-level context vector $h_G$ is computed by pooling node embeddings via a permutation-invariant readout:
+\begin{equation}
+    h_G^{(T_\sigma)} = \mathrm{READOUT}\bigl(\{h_v^{(T_\sigma)}\}_{v\in V}\bigr).
+\end{equation}
+The policy score for an available node $v$ is produced by an MLP:
+\begin{equation}
+    z_v^{(t)} = f_\theta\!\left([h_v^{(T_\sigma)}, h_G^{(T_\sigma)}, \mathbb{I}\{v\in S_t\}]\right).
+\end{equation}
+The distribution over next nodes is obtained by applying a masked softmax:
+\begin{equation}
+    \pi_\theta(v\mid G,S_t)
+    = \frac{\exp(z_v^{(t)})}{\sum_{u\in V\setminus S_t}\exp(z_u^{(t)})},
+    \qquad v\in V\setminus S_t.
+\end{equation}
+The mask enforces validity of the permutation: without it, the policy could repeatedly select the same node, which would not define a valid ordering. The policy is sampled stochastically during training to preserve exploration and executed greedily during evaluation.
+
+The final version of the method introduces a degree-based warm start. In the first iteration, the ordering follows degree information, giving the generator and policy a stable initial structural prior. This is particularly useful for Barab\'asi--Albert graphs, where hubs are central to the data-generating mechanism. After this warm start, the policy is free to adapt and can learn deviations from pure degree ordering when they improve validation loss or structural metrics.
+
+\section{Policy-Gradient Objective}
+\label{sec:rl-policy-gradient}
+
+Because the ordering is discrete, gradients from the generator loss cannot be directly propagated through the selected node indices. The policy is therefore optimized with a likelihood-ratio estimator. For a fixed graph $G$, the expected reward is
+\begin{equation}
+    J_G(\theta)=\mathbb{E}_{\sigma\sim\pi_\theta(\cdot\mid G)}[R(G,\sigma)].
+\end{equation}
+Averaging over the training distribution gives
+\begin{equation}
+    J(\theta)=\mathbb{E}_{G\sim\mathcal{D}}\left[J_G(\theta)\right].
+\end{equation}
+The following theorem formalizes the gradient used by the method.
+
+\begin{theorem}[Policy gradient for learned node ordering]
+\label{thm:policy-gradient-ordering}
+Let $G=(V,E)$ be a finite graph and let $\mathcal{O}_G$ be the set of all valid node orderings. Suppose that $\pi_\theta(\sigma\mid G)>0$ is differentiable with respect to $\theta$ for every $\sigma\in\mathcal{O}_G$, and let $R(G,\sigma)$ be a bounded reward assigned to a complete ordering. Then
+\begin{equation}
+    \nabla_\theta J_G(\theta)
+    = \mathbb{E}_{\sigma\sim\pi_\theta(\cdot\mid G)}
+    \left[ R(G,\sigma)\nabla_\theta\log \pi_\theta(\sigma\mid G) \right].
+\end{equation}
+If the ordering is sampled sequentially as $\sigma=(u_1,\ldots,u_n)$, then
+\begin{equation}
+    \nabla_\theta\log \pi_\theta(\sigma\mid G)
+    = \sum_{t=1}^{n}\nabla_\theta\log \pi_\theta(u_t\mid G,S_t).
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+By definition,
+\begin{equation}
+    J_G(\theta)=\sum_{\sigma\in\mathcal{O}_G}\pi_\theta(\sigma\mid G)R(G,\sigma).
+\end{equation}
+Since $\mathcal{O}_G$ is finite and $R$ is bounded, the gradient can be moved inside the sum:
+\begin{equation}
+    \nabla_\theta J_G(\theta)
+    =\sum_{\sigma\in\mathcal{O}_G}\nabla_\theta\pi_\theta(\sigma\mid G)R(G,\sigma).
+\end{equation}
+Using the identity $\nabla_\theta\pi_\theta(\sigma\mid G)=\pi_\theta(\sigma\mid G)\nabla_\theta\log\pi_\theta(\sigma\mid G)$ gives
+\begin{equation}
+    \nabla_\theta J_G(\theta)
+    =\sum_{\sigma\in\mathcal{O}_G}\pi_\theta(\sigma\mid G)R(G,\sigma)\nabla_\theta\log\pi_\theta(\sigma\mid G),
+\end{equation}
+which is the stated expectation. The sequential factorization follows from
+\begin{equation}
+    \pi_\theta(\sigma\mid G)=\prod_{t=1}^{n}\pi_\theta(u_t\mid G,S_t),
+\end{equation}
+so the logarithm of the trajectory probability is the sum of the logarithms of the step probabilities. Differentiating this sum completes the proof.
+\end{proof}
+
+In practice, a baseline can be subtracted from the reward to reduce variance without changing the expected gradient:
+\begin{equation}
+    \nabla_\theta J_G(\theta)
+    = \mathbb{E}\left[(R(G,\sigma)-b(G))\nabla_\theta\log\pi_\theta(\sigma\mid G)\right].
+\end{equation}
+This is useful because the reward is noisy: it depends on generator training, validation loss, and sample-based structural metrics. An entropy regularizer may also be added to encourage exploration and prevent premature policy collapse:
+\begin{equation}
+    J_{\mathrm{ent}}(\theta)
+    = J(\theta) + \beta\,\mathbb{E}\!\left[\sum_{t=1}^{n}\mathcal{H}\bigl(\pi_\theta(\cdot\mid s_t)\bigr)\right],
+\end{equation}
+where $\beta\ge0$ controls the strength of the entropy bonus.
+
+\section{Alternating Optimization}
+\label{sec:rl-alternating-optimization}
+
+The learned-ordering method alternates between updating the generator and updating the policy. At the beginning of an outer iteration, the policy assigns an ordering to each training graph. The translator converts each ordered graph into a DGMG action sequence. The generator is then trained for a fixed number of epochs on these sequences. After this generator update, validation loss and sample metrics are computed. These values define the reward used to update the policy.
+
+The outer loop is essential. If the policy were updated after a single sequence without retraining the generator, the reward would mostly reflect the current generator's limitations rather than the usefulness of the ordering. If the generator were trained to convergence after each policy change, the method would become computationally impractical. The alternating procedure is a compromise that lets the generator and policy co-adapt.
+
+\begin{algorithm}[H]
+\caption{Attention RL ordering with alternating DGMG training}
+\label{alg:attention-rl-ordering}
+\begin{algorithmic}[1]
+\Require Training graphs $\mathcal{D}_{\mathrm{train}}$, validation graphs $\mathcal{D}_{\mathrm{val}}$, policy $\pi_\theta$, generator $p_\phi$
+\For{outer iteration $i=1,\ldots,I$}
+    \For{\textbf{each} graph $G\in\mathcal{D}_{\mathrm{train}}$}
+        \If{$i=1$}
+            \State Compute degree ordering $\sigma$
+        \Else
+            \State Sample or compute ordering $\sigma\sim\pi_\theta(\cdot\mid G)$
+        \EndIf
+        \State Translate graph into action sequence $a=\mathcal{T}(G,\sigma)$
+    \EndFor
+    \State Update DGMG parameters $\phi$ by minimizing teacher-forced NLL on the translated sequences
+    \State Evaluate validation NLL and sample graphs from $p_\phi$
+    \State Compute structural metrics and the reward $R(\tau)$ from Eq.~\eqref{eq:reward-composite}
+    \For{$k=1,\ldots,K$ policy steps}
+        \State Estimate policy gradient with REINFORCE
+        \State Update $\theta$
+    \EndFor
+\EndFor
+\State \Return trained policy $\pi_\theta$ and generator $p_\phi$
+\end{algorithmic}
+\end{algorithm}
+
+The variable $i$ in the outer loop is not the same as the position $t$ in the ordering trajectory. The trajectory index $t$ runs from $1$ to $n$ within a single graph and selects the nodes of one ordering. The outer-loop index $i$ counts rounds of joint optimization between the ordering policy and the generator. This distinction is important when interpreting the algorithm: a single outer iteration contains many ordering decisions, one sequence per graph, and one generator-training stage. The parameter $I$ controls how many times generator learning and policy learning alternate, while $K$ controls how strongly the policy is updated within each alternation.
+
+\section{Why Attention RL Ordering Differs from a Fixed Heuristic}
+\label{sec:rl-hybrid-behavior}
+
+A deterministic heuristic applies the same rule at every step. Degree ordering always prioritizes degree, BFS always follows frontier expansion, and MCS always prioritizes connectivity to the selected set. A learned policy can imitate any of these behaviors when useful, but it can also switch behavior during the ordering. For example, in a Barab\'asi--Albert graph, the policy may begin by selecting high-degree nodes to reveal hubs and then select nodes that preserve connectivity or complete local neighborhoods. This hybrid possibility is the main reason for learning an ordering rather than merely selecting the best deterministic baseline.
+
+The attention mechanism strengthens this ability because the policy does not rely on a single scalar score such as degree. It can combine local neighborhoods, global graph context, and the current selected set. As the ordering progresses, the selected-node mask changes the state, and the policy distribution can change accordingly. The ordering is therefore not just graph-conditioned; it is history-conditioned. The three-layer message-passing stack further enlarges the effective receptive field before each selection step, and the non-random degree-based warm start ensures that the controller has a strong hub-aware prior from the very beginning of training, rather than having to rediscover hub structure through exploration.
+
+%\section{Chapter Summary}
+%\label{sec:rl-summary}
+
+%This chapter formulated node ordering as a graph-conditioned reinforcement-learning problem. A complete ordering is treated as a trajectory, each action selects one unselected node, and the reward is determined by downstream DGMG performance. The bilevel structure makes explicit why this is harder than standard supervised learning: the reward is only defined after the generator has been updated, and there is no ground-truth ordering to imitate. The policy-gradient theorem justifies the REINFORCE update used for the discrete ordering decisions, and the alternating algorithm couples policy improvement with generator training. The final Attention RL ordering method adds graph attention, multiple message-passing layers, and a degree warm start, producing the version evaluated in the final Barab\'asi--Albert experiments.

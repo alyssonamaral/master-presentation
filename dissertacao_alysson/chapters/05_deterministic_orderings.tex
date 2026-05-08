@@ -1,0 +1,43 @@
+%========================
+% chapters/05_deterministic_orderings.tex
+%========================
+\chapter{Deterministic Node Orderings}
+\label{chap:deterministic-orderings}
+
+Before learning orderings, it is necessary to understand what fixed orderings do to the sequential generation problem. This chapter describes the deterministic orderings used as baselines and explains why each one may help or harm DGMG depending on the target graph topology. The discussion analyzes each ordering through the lens of the action sequence it produces, rather than through purely structural graph properties. This perspective is deliberate: the generator never observes the original graph directly during training. Instead, it observes only the sequence of construction actions derived from that graph. Therefore, what matters about an ordering is not how it looks geometrically, but how easy or difficult it makes the resulting action sequence to learn.
+
+\section{Traversal-Based Orderings}
+\label{sec:traversal-orderings}
+
+Breadth-first search (BFS) orders nodes by expanding a frontier level by level from a root. In sparse hierarchical graphs, this tends to place parents before children and keeps related nodes close in the sequence. For tree and binary-tree generation, this is a strong inductive bias: when a new node is introduced, its correct parent is usually located in the recent frontier, and the ChooseDest decision becomes comparatively simple. BFS can be weaker for cycles because expanding by layers does not necessarily preserve the ring as a nearly linear path, and it can expose multiple plausible backward destinations too early.
+
+Depth-first search (DFS) follows a path as far as possible before backtracking. This makes it naturally suited to structures in which a long chain or near-chain is a good representation. Cycles are the clearest example in this dissertation. A DFS-like order can reveal almost the entire ring as a path and postpone closure to a small number of final decisions. The same behavior is less obviously optimal for trees, where excessive depth can separate siblings and make some branching patterns less regular, but DFS still preserves strong local continuity.
+
+LexBFS is a lexicographic variant of breadth-first search. It uses labels induced by previously selected nodes to break ties in a way that preserves more structural information than a naive BFS traversal. In the experiments, LexBFS often behaves as a robust compromise: it retains frontier logic but can also create stable path-like orderings in some families. This explains why it performs strongly in cycles and trees.
+
+\section{Centrality and Sparsity Orderings}
+\label{sec:centrality-sparsity-orderings}
+
+Degree ordering places high-degree nodes early. Its effect is particularly strong in hub-dominated graphs. In a star, selecting the hub first collapses most later destination choices onto a single node, making the sequence extremely regular. Degree ordering can also help in scale-free graphs, where early exposure of hubs may support the preferential-attachment structure. However, it can be poor for acyclic families such as trees if centrality does not correspond to a parent-child construction process.
+
+Degeneracy ordering is based on the repeated removal of low-degree nodes. It is often associated with sparse graph structure and core decomposition. From the perspective of sequential generation, degeneracy can create orderings that reveal a sparse backbone while avoiding some of the instability of pure degree ordering. In Barab\'asi--Albert graphs, this makes degeneracy a strong compromise: it helps preserve size and connectivity while still respecting the presence of hubs.
+
+Maximum cardinality search (MCS) selects nodes according to how many already selected neighbors they have. This makes the ordering sensitive to the growing selected set. It often favors vertices that are well connected to the current prefix and can therefore reduce ambiguity in edge decisions. In the experiments, MCS is especially relevant for Barab\'asi--Albert graphs because it balances connectivity with realistic degree structure.
+
+\section{Spectral and Random Orderings}
+\label{sec:spectral-random-orderings}
+
+Spectral ordering uses eigenvectors of graph matrices to impose a global one-dimensional layout. It is attractive because it can reflect global connectivity patterns, but the experiments show that global geometric structure is not always aligned with the local conditional decisions required by DGMG. A spectral layout may be graph-theoretically meaningful and still produce action sequences in which edge destinations are difficult to predict.
+
+Random ordering is included as a structure-agnostic baseline. It intentionally removes the structural prior encoded by the other heuristics. If random ordering performed close to the best deterministic orderings, the dissertation's main premise would be weakened. Instead, the experiments show large gaps in several families, confirming that the graph-to-sequence map is an important modeling decision.
+
+\section{Ordering as an Entropy-Shaping Mechanism}
+\label{sec:ordering-entropy}
+
+The main effect of deterministic ordering can be summarized as entropy shaping. In DGMG, the ChooseDest module must select one destination among previous nodes. When the correct destination is structurally obvious, the conditional distribution is easier to learn; when many previous nodes are plausible, the distribution becomes more diffuse. A good ordering reduces the effective ambiguity of these decisions by controlling which nodes are available and how they relate to the current node.
+
+This explains the topology-dependent behavior observed later. Cycles favor orderings that make the graph look like a path until the closure decision. Trees favor orderings that expose parents before children in compact frontiers. Stars favor orderings that reveal the hub immediately. Barab\'asi--Albert graphs do not have a single dominant requirement; they combine hub exposure, sparse connectivity, and size control. As a result, different deterministic orderings optimize different metrics.
+
+The deterministic study motivates learned ordering for two reasons. First, no fixed ordering is universally best. A heuristic that is excellent for one topology can fail for another. Second, even within a single family, the best behavior may be hybrid. For example, a Barab\'asi--Albert graph may benefit from degree-like choices early in the sequence to expose hubs, but from BFS-like or MCS-like choices later to preserve connectivity. A handcrafted rule must commit to one principle, whereas a learned policy can condition its choices on the graph and on the partial ordering already built.
+
+The next chapter turns this motivation into a formal reinforcement-learning problem. The policy will not be trained to imitate a known ordering. Instead, it will be trained to produce orderings that improve the downstream generator.

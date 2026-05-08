@@ -1,0 +1,292 @@
+%========================
+% main.tex
+%========================
+\documentclass[12pt,a4paper,oneside]{report}
+
+% Encoding and language
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[brazil,english]{babel}
+\usepackage{csquotes}
+
+% Typography
+\usepackage{mathptmx}
+\usepackage{setspace}
+\onehalfspacing
+
+% Math and theorem environments
+\usepackage{amsmath,amssymb,amsfonts,mathtools,bm}
+\usepackage{amsthm}
+\newtheorem{theorem}{Theorem}[chapter]
+\newtheorem{definition}{Definition}[chapter]
+
+% Figures and tables
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{placeins}
+\usepackage{subcaption}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{tabularx}
+\usepackage{ragged2e}
+\newcolumntype{Y}{>{\RaggedRight\arraybackslash}X}
+\graphicspath{{figures/}}
+
+% Algorithms
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% Utilities
+\usepackage{xcolor}
+\usepackage{siunitx}
+\usepackage{geometry}
+\geometry{a4paper, margin=3cm}
+
+% Hyperlinks
+\usepackage[hidelinks]{hyperref}
+\usepackage[nameinlink,noabbrev]{cleveref}
+
+% TOC
+\usepackage{tocloft}
+\renewcommand{\contentsname}{TABLE OF CONTENTS}
+\renewcommand{\listfigurename}{LIST OF FIGURES}
+\renewcommand{\listtablename}{LIST OF TABLES}
+
+% Chapter formatting
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{2}
+
+% Custom commands
+\newcommand{\thesistitle}{Learning Node Orderings for Autoregressive Graph Generation}
+\newcommand{\thesisauthor}{Alysson Amaral da Silva}
+\newcommand{\thesisyear}{2026}
+\newcommand{\thesiscity}{Curitiba}
+\newcommand{\advisorname}{Prof.\ Dr.\ Andr\'e Lu\'is Vignatti}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\NLL}{\mathcal{L}_{\mathrm{NLL}}}
+\newcommand{\policy}{\pi_{\theta}}
+\newcommand{\generator}{p_{\phi}}
+\newcommand{\OrderSet}{\mathcal{O}}
+\newcommand{\GraphSet}{\mathcal{D}}
+\newcommand{\maybeincludegraphics}[2][]{%
+\IfFileExists{#2}{\includegraphics[#1]{#2}}{\fbox{\parbox{0.88\linewidth}{\centering Missing figure file: \texttt{\detokenize{#2}}}}}%
+}
+
+\begin{document}
+\selectlanguage{english}
+
+%========================================
+% Title page
+%========================================
+\begin{titlepage}
+    \thispagestyle{empty}
+    \centering
+
+    {\Large \thesisauthor \par}
+
+    \vspace{3cm}
+
+    {\bfseries\LARGE \MakeUppercase{\thesistitle}\par}
+
+    \vspace{2cm}
+
+    {\large
+    Master's Dissertation submitted to the Graduate Program in Informatics,
+    Department of Exact Sciences, Federal University of Paran\'a,
+    as a partial requirement for the degree of Master in Informatics.\par}
+
+    \vspace{1cm}
+
+    {\large Advisor: \advisorname\par}
+
+    \vfill
+
+    {\large \thesiscity\par}
+    {\large \thesisyear\par}
+\end{titlepage}
+
+%========================================
+% Front matter
+%========================================
+\pagenumbering{roman}
+\setcounter{page}{1}
+
+\begin{abstract}
+Sequential graph generative models transform graph-structured objects into ordered construction sequences before learning. This transformation is necessary in autoregressive generators, but it is also a modeling choice: the same graph can induce many different action sequences, and each sequence changes the conditioning context seen by the model. This dissertation studies node ordering as a central component of autoregressive graph generation rather than as a neutral preprocessing step. The work first revisits a autoregressive graph model, reproducing its graph-to-sequence mechanism and using it as a controlled environment for analyzing how deterministic node orderings affect structural reconstruction. The experiments compare degree ordering, breadth-first search, depth-first search, degeneracy, LexBFS, maximum cardinality search, spectral ordering, and random permutations across cycles, trees, binary trees, stars, and Barab\'asi--Albert graphs.
+
+The main contribution is a learned-ordering formulation in which node sequencing is modeled as a graph-conditioned Markov Decision Process. A policy parameterized by a Graph Neural Network selects nodes one at a time, producing an ordering that is translated into an action sequence for an autoregressive model. Because the ordering is discrete and its effect is only observable through downstream generation quality, the policy is optimized with a policy-gradient objective inside an alternating procedure that updates both the ordering controller and the graph generator. The final version of the method, called Attention RL ordering, strengthens the controller with an attention-based graph encoder, three graph layers, and a degree-based warm start. On Barab\'asi--Albert graphs, the method achieves perfect valid-size ratio, near-perfect connectivity, realistic graph size, and competitive hub-oriented statistics, showing that learned orderings can become strong alternatives to handcrafted serializations. Overall, the dissertation argues that node ordering should be treated as an optimization target in sequential graph generation and that reinforcement learning provides a natural framework for coupling this target to downstream generative performance.
+
+\textbf{Keywords:} graph generation; autoregressive models; node ordering; reinforcement learning; graph neural networks.
+\end{abstract}
+
+\clearpage
+
+\begin{otherlanguage*}{brazil}
+\renewcommand{\abstractname}{Resumo}
+\begin{abstract}
+Modelos generativos sequenciais de grafos transformam objetos estruturados em grafos em sequ\^encias ordenadas de constru\c{c}\~ao antes do aprendizado. Essa transforma\c{c}\~ao \`e necess\'aria em geradores autoregressivos, mas tamb\'em \'e uma escolha de modelagem: o mesmo grafo pode induzir muitas sequ\^encias de a\c{c}\~oes diferentes, e cada sequ\^encia altera o contexto condicional observado pelo modelo. Esta disserta\c{c}\~ao estuda a ordena\c{c}\~ao de n\'os como um componente central da gera\c{c}\~ao autorregressiva de grafos, e n\~ao como uma simples etapa neutra de pr\'e-processamento. O trabalho revisita inicialmente um modelo de grafos autoregressivo, reproduzindo seu mecanismo de convers\~ao de grafos em sequ\^encias e utilizando-o como ambiente controlado para analisar como diferentes ordena\c{c}\~oes determin\'isticas afetam a reconstru\c{c}\~ao estrutural. Os experimentos comparam ordena\c{c}\~ao por grau, busca em largura, busca em profundidade, degeneresc\^encia, LexBFS, \emph{maximum cardinality search}, ordena\c{c}\~ao espectral e permuta\c{c}\~oes aleat\'orias em ciclos, \''arvores, \''arvores bin\'arias, estrelas e grafos de Barab\'asi--Albert.
+
+A principal contribui\c{c}\~ao \`e uma formula\c{c}\~ao aprendida de ordena\c{c}\~ao, na qual o sequenciamento de n\'os \`e modelado como um Processo de Decis\~ao de Markov condicionado ao grafo. Uma pol\'itica parametrizada por uma Rede Neural em Grafos seleciona os n\'os um a um, produzindo uma ordena\c{c}\~ao que \`e traduzida em uma sequ\^encia de a\c{c}\~oes para o modelo autorregressivo. Como a ordena\c{c}\~ao \`e discreta e seu efeito s\'o \`e observado por meio da qualidade gerativa final, a pol\'itica \`e otimizada por gradiente de pol\'itica dentro de um procedimento alternado que atualiza tanto o controlador de ordena\c{c}\~ao quanto o gerador de grafos. A vers\~ao final do m\'etodo, chamada Attention RL ordering, fortalece o controlador com um codificador baseado em aten\c{c}\~ao, tr\^es camadas de grafo e uma inicializa\c{c}\~ao baseada na ordena\c{c}\~ao por grau. Em grafos de Barab\'asi--Albert, o m\'etodo alcan\c{c}a raz\~ao perfeita de tamanho v\'alido, conectividade quase perfeita, tamanho realista e estat\'isticas competitivas relacionadas a hubs, mostrando que ordena\c{c}\~oes aprendidas podem se tornar alternativas fortes \`as serializa\c{c}\~oes constru\'idas manualmente. De forma geral, a disserta\c{c}\~ao defende que a ordena\c{c}\~ao de n\'os deve ser tratada como um alvo de otimiza\c{c}\~ao na gera\c{c}\~ao sequencial de grafos e que o aprendizado por refor\c{c}o oferece uma estrutura natural para acoplar esse alvo ao desempenho gerativo final.
+
+\textbf{Palavras-chave:} gera\c{c}\~ao de grafos; modelos autoregressivos; ordena\c{c}\~ao de n\'os; aprendizado por refor\c{c}o; redes neurais em grafos.
+\end{abstract}
+\end{otherlanguage*}
+
+\clearpage
+\tableofcontents
+\clearpage
+\listoffigures
+\clearpage
+\listoftables
+\clearpage
+
+\chapter*{LIST OF ACRONYMS}
+\addcontentsline{toc}{chapter}{LIST OF ACRONYMS}
+\begin{longtable}{p{3cm}p{11cm}}
+BA   & Barab\'asi--Albert \\
+BFS  & Breadth-First Search \\
+DFS  & Depth-First Search \\
+DGMG & Deep Generative Model of Graphs \\
+GAT  & Graph Attention Network \\
+GCN  & Graph Convolutional Network \\
+GGNN & Gated Graph Neural Network \\
+GNN  & Graph Neural Network \\
+GRU  & Gated Recurrent Unit \\
+LexBFS & Lexicographic Breadth-First Search \\
+MCS  & Maximum Cardinality Search \\
+MDP  & Markov Decision Process \\
+MLP  & Multi-Layer Perceptron \\
+NLL  & Negative Log-Likelihood \\
+RL   & Reinforcement Learning \\
+\end{longtable}
+
+\clearpage
+
+\chapter*{LIST OF SYMBOLS}
+\addcontentsline{toc}{chapter}{LIST OF SYMBOLS}
+
+\noindent\textbf{Graph notation}
+\begin{longtable}{p{3.8cm}p{10.2cm}}
+$G=(V,E)$              & Undirected, unweighted graph with node set $V$ and edge set $E$ \\
+$V$                    & Finite set of nodes \\
+$E \subseteq V\times V$& Set of undirected edges \\
+$n=|V|$                & Number of nodes \\
+$m=|E|$                & Number of edges \\
+$A\in\{0,1\}^{n\times n}$ & Adjacency matrix of $G$ (defined after fixing a node ordering) \\
+$\mathcal{N}(v)$       & Neighborhood of node $v$ \\
+$e_{uv}$               & Edge feature between nodes $u$ and $v$ \\
+$G_t$                  & Partial graph at autoregressive construction step $t$ \\
+\end{longtable}
+
+\noindent\textbf{Node orderings and sequences}
+\begin{longtable}{p{3.8cm}p{10.2cm}}
+$\sigma=(v_1,\ldots,v_n)$  & Node ordering; permutation of $V$ \\
+$\mathcal{O}_G$            & Set of all admissible node orderings for graph $G$ \\
+$\mathcal{T}(G,\sigma)$    & Graph-to-sequence translator; maps $(G,\sigma)$ to an action sequence \\
+$a=(a_1,\ldots,a_L)$       & Autoregressive action sequence of length $L$ \\
+$a_t$                      & Action taken at step $t$ \\
+$a_{<t}=(a_1,\ldots,a_{t-1})$ & Prefix of the action sequence up to step $t$ \\
+$L$                        & Total length of an action sequence \\
+\end{longtable}
+
+\noindent\textbf{Generator}
+\begin{longtable}{p{3.8cm}p{10.2cm}}
+$\phi$                       & Parameters of the graph generator \\
+$p_\phi$                     & Generator distribution parameterized by $\phi$ \\
+$\phi^\star(\theta)$         & Optimal generator parameters for a given policy $\pi_\theta$ \\
+$\mathcal{L}_{\mathrm{NLL}}(\phi;G,\sigma)$ & Negative log-likelihood training loss \\
+$\mathcal{L}_{\mathrm{val}}(\phi,\mathcal{T}(G,\sigma))$ & Validation negative log-likelihood \\
+$\overline{\mathcal{L}}_{\mathrm{val}}(\tau)$ & Average validation loss over $\mathcal{D}_{\mathrm{val}}$ \\
+\end{longtable}
+
+\noindent\textbf{Datasets}
+\begin{longtable}{p{3.8cm}p{10.2cm}}
+$\mathcal{D}$              & Dataset of training graphs \\
+$\mathcal{D}_{\mathrm{train}}$ & Training split \\
+$\mathcal{D}_{\mathrm{val}}$   & Validation split \\
+$N\in[20,60]$              & Target node-count range for Barab\'asi--Albert graphs \\
+$m_{\mathrm{BA}}$          & Attachment parameter of the BA preferential-attachment mechanism \\
+\end{longtable}
+
+\noindent\textbf{Markov Decision Process}
+\begin{longtable}{p{3.8cm}p{10.2cm}}
+$\mathcal{S}$              & State space \\
+$\mathcal{A}$              & Action space; $\mathcal{A}(s_t)=V\setminus S_t$ denotes available actions at state $s_t$ \\
+$\mathcal{P}$              & State transition probability function \\
+$\mathcal{R}$              & Step-wise reward function \\
+$\gamma$                   & Discount factor (set to $1$ in the episodic setting) \\
+$\tau$                     & Complete trajectory (full episode) \\
+$s_t=(G,S_t)$              & State at step $t$: input graph $G$ and set of already selected nodes $S_t$ \\
+$S_t\subseteq V$           & Set of nodes already selected before step $t$ \\
+$u_t$                      & Node selected at ordering step $t$ \\
+\end{longtable}
+
+\noindent\textbf{Ordering policy}
+\begin{longtable}{p{3.8cm}p{10.2cm}}
+$\theta$                   & Parameters of the ordering policy \\
+$\theta^\star$             & Optimal policy parameters \\
+$\pi_\theta$               & Stochastic ordering policy parameterized by $\theta$ \\
+$J(\theta)$                & Expected return of the policy; training objective \\
+$J_G(\theta)$              & Expected return of the policy for a single graph $G$ \\
+$b(G)$                     & Baseline for variance reduction in REINFORCE \\
+$\beta$                    & Entropy regularization coefficient \\
+$\mathcal{H}(\cdot)$       & Entropy of a probability distribution \\
+\end{longtable}
+
+\noindent\textbf{Rewards}
+\begin{longtable}{p{3.8cm}p{10.2cm}}
+$R(\tau)$                  & Total delayed reward (trajectory return) \\
+$R(G,\sigma,\phi)$         & Reward for ordering $\sigma$ of graph $G$ under generator parameters $\phi$ \\
+$R_{\mathrm{pred}}(\tau)$  & Predictive component of the composite reward (based on validation NLL) \\
+$R_{\mathrm{struct}}(\tau)$& Structural component of the composite reward (based on generated-sample quality) \\
+$\lambda$                  & Trade-off weight between predictive and structural reward \\
+\end{longtable}
+
+\noindent\textbf{Graph Neural Network}
+\begin{longtable}{p{3.8cm}p{10.2cm}}
+$x_v$                      & Input feature vector of node $v$ \\
+$h_v^{(k)}$                & Embedding of node $v$ at GNN layer $k$ \\
+$h_v^{(T_\sigma)}$         & Final node embedding produced by the policy GNN after $T_\sigma$ layers \\
+$h_G^{(T_\sigma)}$         & Graph-level context vector, obtained by pooling node embeddings \\
+$\eta^{(k)}$               & Message function at GNN layer $k$ \\
+$\psi^{(k)}$               & Node update function at GNN layer $k$ \\
+$\square$                  & Permutation-invariant aggregation operator (e.g., sum or mean) \\
+$T_\sigma$                 & Number of message-passing rounds in the policy network \\
+$z_v^{(t)}$                & Logit score for candidate node $v$ at ordering step $t$ \\
+$f_\theta$                 & Scoring MLP that maps node and graph embeddings to a logit \\
+$\mathbb{I}\{v\in S_t\}$   & Indicator: equals $1$ if node $v$ has already been selected, $0$ otherwise \\
+\end{longtable}
+
+\noindent\textbf{Hyperparameters}
+\begin{longtable}{p{3.8cm}p{10.2cm}}
+$H$                        & Hidden dimension of the generator \\
+$T$                        & Number of DGMG message-passing rounds \\
+$\alpha$                   & Learning rate \\
+$I$                        & Number of outer iterations in the alternating optimization \\
+$K$                        & Number of policy-gradient steps per outer iteration \\
+\end{longtable}
+
+\clearpage
+
+%========================================
+% Main matter
+%========================================
+\pagenumbering{arabic}
+
+\input{chapters/01_introduction}
+\input{chapters/02_foundations}
+\input{chapters/03_related_work}
+\input{chapters/04_dgmg_reproduction}
+\input{chapters/05_deterministic_orderings}
+\input{chapters/06_rl_ordering}
+\input{chapters/07_experimental_protocol}
+\input{chapters/08_results_discussion}
+\input{chapters/09_conclusion}
+
+\bibliographystyle{ieeetr}
+\bibliography{refs}
+
+\end{document}

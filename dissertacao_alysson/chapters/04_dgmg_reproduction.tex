@@ -1,0 +1,77 @@
+%========================
+% chapters/04_dgmg_reproduction.tex
+%========================
+\chapter{DGMG Reproduction and Graph-to-Sequence Translation}
+\label{chap:dgmg-reproduction}
+
+This chapter describes the reproduction of the Deep Generative Model of Graphs used as the experimental environment for the dissertation. The goal of the reproduction is not only to obtain a working graph generator, but also to expose the point at which node ordering enters the learning pipeline. Once this point is made explicit, the same generator can be trained under different graph-to-sequence maps and the effect of ordering can be measured directly.
+
+\section{Constructive Generation in DGMG}
+\label{sec:dgmg-constructive-generation}
+
+DGMG is an autoregressive graph generator that constructs a graph through a sequence of decisions \cite{li2018learning}. At each stage, the model maintains a partial graph $G_t$ and predicts the next action conditioned on a learned representation of that partial graph. The action set includes adding a new node, deciding whether to add an edge from the current node, selecting the destination of that edge among previous nodes, and stopping edge addition for the current node. The process terminates when the model decides not to add another node.
+
+The constructive nature of DGMG is important for this dissertation because it makes the ordering dependency transparent. During supervised training, a target graph must be converted into the exact sequence of actions that would construct it. This conversion requires a node ordering. If the ordering changes, the node-addition times change, the set of available edge destinations at each step changes, and the target sequence changes. The model architecture may be identical, but the training problem is different.
+
+Formally, given a graph $G$ and an ordering $\sigma=(v_1,\ldots,v_n)$, the translator produces an action sequence
+\begin{equation}
+    a = \mathcal{T}(G,\sigma)=(a_1,\ldots,a_L).
+\end{equation}
+The generator is trained by maximizing the likelihood of this sequence or, equivalently, minimizing
+\begin{equation}
+    \mathcal{L}_{\mathrm{NLL}}(\phi;G,\sigma)
+    = -\sum_{t=1}^{L}\log p_\phi(a_t\mid a_{<t}).
+\end{equation}
+This equation is the simplest expression of the ordering problem. The graph $G$ is fixed, but $\sigma$ changes the loss surface seen by the model.
+
+\section{Graph Representation and Decision Modules}
+\label{sec:dgmg-modules}
+
+The reproduced implementation follows the modular structure of DGMG. A graph embedding module computes node and graph representations for the current partial graph. Message passing updates node states through local neighborhoods, and a readout function aggregates node information into a graph-level vector. Separate decision modules then predict the next action type. The AddNode module decides whether generation should introduce a new node or terminate. The AddEdge module decides whether the current node should receive another edge. The ChooseDest module selects the destination of the new edge among nodes already present in the partial graph.
+
+The ChooseDest decision is the most directly affected by ordering. If the correct destination is a recent or structurally obvious previous node, the decision can be learned with lower ambiguity. If the correct destination is one among many unrelated previous nodes, the model must distribute probability across a larger and less coherent candidate set. This is why the dissertation repeatedly interprets ordering through locality and entropy: a good ordering makes the correct destinations easier to identify from the partial graph.
+
+\section{Teacher-Forced Training}
+\label{sec:dgmg-training}
+
+The reproduction uses teacher-forced maximum likelihood training. For each target graph, the translator provides the correct sequence of AddNode, AddEdge, and ChooseDest actions. During training, the model conditions on the ground-truth history rather than on its own sampled mistakes. This stabilizes optimization and allows a clear comparison among orderings, because each ordering deterministically defines the target sequence used for training.
+
+Let $\mathcal{D}$ be the training set and let $\sigma_G$ be the ordering assigned to graph $G$. The empirical training objective is
+\begin{equation}
+    \min_\phi \; \frac{1}{|\mathcal{D}|}\sum_{G\in\mathcal{D}}\mathcal{L}_{\mathrm{NLL}}(\phi;G,\sigma_G).
+\end{equation}
+In the deterministic experiments, $\sigma_G$ is produced by a fixed heuristic such as BFS or degree ordering. In the learned-ordering experiments, $\sigma_G$ is sampled from the policy $\pi_\theta(\cdot\mid G)$. This distinction is the bridge from reproduction to the reinforcement-learning method introduced later.
+
+\section{Translation Rule}
+\label{sec:dgmg-translation-rule}
+
+The translation rule used in this dissertation follows the same constructive logic for all orderings. Nodes are introduced according to $\sigma$. When node $v_i$ is introduced, only the nodes $v_1,\ldots,v_{i-1}$ are available as destinations. For every edge between $v_i$ and a previous node, the translator emits an AddEdge action followed by a ChooseDest action. Once all backward edges of $v_i$ have been emitted, the translator emits the action that stops edge addition for the current node. After the last node has been processed, the translator emits the final stop action for node generation.
+
+The length of the sequence depends on the number of nodes and edges. For a simple undirected graph, each node addition contributes node-level actions, and each edge contributes an edge decision and a destination decision. The exact length depends on the adopted implementation details, but the important point is that the edge-destination part of the sequence is strongly conditioned by ordering. The same edge may be predicted early or late, and its destination may compete with few or many previous nodes depending on where the incident vertices appear in the ordering.
+
+\begin{algorithm}[H]
+\caption{Graph-to-sequence translation under a node ordering}
+\label{alg:translator}
+\begin{algorithmic}[1]
+\Require Graph $G=(V,E)$ and ordering $\sigma=(v_1,\ldots,v_n)$
+\Ensure Action sequence $a$
+\State Initialize $a\leftarrow [\,]$
+\For{$i=1$ to $n$}
+    \State Append the action that adds node $v_i$
+    \For{each $j<i$ such that $(v_i,v_j)\in E$}
+        \State Append an AddEdge action
+        \State Append a ChooseDest action pointing to $v_j$
+    \EndFor
+    \State Append the action that stops edge addition for $v_i$
+\EndFor
+\State Append the final action that stops node generation
+\State \Return $a$
+\end{algorithmic}
+\end{algorithm}
+
+\section{Role of the Reproduction}
+\label{sec:dgmg-role}
+
+The reproduction serves three purposes in the dissertation. First, it provides a faithful sequential generator whose behavior can be compared under different orderings. Second, it defines the exact interface used by the reinforcement-learning policy: the policy only needs to output an ordering, and the existing translator converts that ordering into DGMG supervision. Third, it makes the analysis interpretable. When performance changes, the change can be attributed to the ordering-induced sequence rather than to a change in generator architecture.
+
+This design choice is important methodologically. Many graph generation studies compare different architectures, losses, or datasets. Here, the architecture is held fixed as much as possible. The central experimental intervention is the order in which the graph is revealed to the autoregressive model. This isolates node ordering as an independent modeling variable and prepares the ground for learning that variable directly.

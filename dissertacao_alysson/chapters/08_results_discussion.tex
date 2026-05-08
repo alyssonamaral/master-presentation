@@ -1,0 +1,136 @@
+%========================
+% chapters/08_results_discussion.tex
+%========================
+\chapter{Results and Discussion}
+\label{chap:results-discussion}
+
+This chapter presents the empirical results and connects them to the central thesis of the dissertation: node ordering changes the effective learning problem faced by an autoregressive graph generator. The discussion first summarizes the deterministic-ordering study, then focuses on the final Attention RL ordering results on Barab\'asi--Albert graphs.
+
+\section{Deterministic Ordering Results}
+\label{sec:results-deterministic}
+
+The deterministic experiments show that there is no universally optimal ordering. The best ordering depends on the target topology and on the structural property being measured. This result is important because it justifies the transition from fixed heuristics to learned ordering. If a single heuristic dominated all graph families, a learned policy would be less compelling. Instead, the empirical evidence shows that each ordering acts as a different structural bias.
+
+Cycles are best served by orderings that make the graph appear as a nearly linear chain before closure. LexBFS and DFS achieve the strongest cycle reconstruction, with LexBFS reaching a cycle ratio of $0.9962$ and a valid ratio of $0.7179$. The interpretation is direct: when the ring is exposed as a path, most edge decisions are local, and the final closure is isolated to a small number of decisions. BFS, despite being powerful for trees, performs poorly in cycles because level-wise expansion does not preserve the sequential geometry of the ring.
+
+Trees and binary trees favor BFS. In generic trees, BFS reaches a tree ratio of $0.9818$ and a valid ratio of $0.9790$. In binary trees, BFS reaches a binary-tree ratio of $0.9940$ and a valid ratio of $0.9915$. This confirms the parent-frontier interpretation: level-wise ordering tends to place the correct parent in a compact and meaningful candidate set. DFS, LexBFS, MCS, and degeneracy also perform well in these families, but BFS is the most aligned with the constructive process required by the generator.
+
+Stars invert this pattern. The best ordering is degree ordering, which achieves a star ratio of $0.9980$ and a valid ratio of $0.9980$. In a star, the central decision is whether the hub appears early. Once the hub is introduced, almost every later edge decision points to it, and the sequence becomes extremely regular. This result shows that centrality-based orderings are not generally good or bad; they are good when the topology is hub-dominated.
+
+Barab\'asi--Albert graphs are more nuanced. Table~\ref{tab:ba-deterministic-results} shows that different deterministic orderings occupy different points in the metric space. BFS obtains perfect connectivity but produces smaller graphs on average, with an average size of only $27.3$ nodes compared to the training range of $[20,60]$. Degree ordering gives perfect valid-size ratio and the largest average size, but connectivity drops sharply to $0.6490$. Degeneracy and MCS provide strong compromises among valid size, connectivity, and hub-related statistics. This multi-objective behavior is exactly the setting in which a learned policy may be useful.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\begin{tabular}{lrrrrr}
+\toprule
+\textbf{Ordering} & \textbf{Avg. size} & \textbf{Valid size} & \textbf{Connected} & \textbf{Degree Gini} & \textbf{Hubiness} \\
+\midrule
+BFS        & 27.3110 & 0.8130 & \textbf{1.0000} & 0.2923 & 0.4282 \\
+Degeneracy & 37.0770 & 0.9670 & 0.9740 & 0.3287 & 0.3993 \\
+MCS        & 40.5150 & 0.9670 & 0.9110 & 0.3323 & 0.3886 \\
+DFS        & 40.8660 & 0.9630 & 0.8280 & 0.3411 & 0.4202 \\
+Random     & 46.2100 & 0.9940 & 0.7930 & 0.3328 & 0.3460 \\
+Degree     & \textbf{50.3650} & \textbf{1.0000} & 0.6490 & \textbf{0.3516} & 0.3326 \\
+Spectral   & 48.4210 & 0.9910 & 0.6010 & 0.3184 & 0.3085 \\
+LexBFS     & 50.2580 & 0.9540 & 0.4910 & 0.3358 & 0.3237 \\
+\bottomrule
+\end{tabular}
+\caption{Deterministic-ordering results on Barab\'asi--Albert graphs.}
+\label{tab:ba-deterministic-results}
+\end{table}
+
+The deterministic results support an entropy-based interpretation of ordering. A good ordering reduces the uncertainty of the next action by placing structurally relevant nodes in the prefix. The relevant notion of ``structurally relevant'' changes with the graph family. In cycles, it means path continuity; in trees, it means parent-frontier locality; in stars, it means early hub exposure; in BA graphs, it means a balance among hubs, connectivity, and sparsity.
+
+\section{Learned Ordering: GCN RL Baseline}
+\label{sec:results-gcn-rl}
+
+Before evaluating the full Attention RL ordering, we first examined a GCN-based RL policy as an intermediate step. In this configuration, the ordering policy is parameterized by a standard Graph Convolutional Network \cite{kipf2017gcn} and trained using the same alternating REINFORCE procedure described in Chapter~\ref{chap:rl-ordering}. The GCN RL ordering achieves an average generated size of $39.3220$ and a perfect valid-size ratio of $1.0000$, demonstrating that the general learned-ordering framework is viable and that size control is achievable. However, connectivity remains at $0.6334$, which is clearly below the strongest deterministic baselines and does not substantially improve over the degree ordering warm start. This result establishes the limitation that motivates the attention-based upgrade: while a learned policy can capture hub-oriented size preferences when the GCN encoder is initialized from degree ordering, the GCN's aggregation scheme is not expressive enough to adapt the full sequence to the global connectivity requirements of BA graphs.
+
+\section{Attention RL Ordering on Barab\'asi--Albert Graphs}
+\label{sec:results-attention-rl}
+
+The final learned-ordering method was evaluated on Barab\'asi--Albert graphs using the same metrics as the deterministic baselines. Table~\ref{tab:ba-rl-final} reports the final generated-sample metrics for Attention RL ordering.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\begin{tabular}{lrrrrr}
+\toprule
+\textbf{Method} & \textbf{Avg. size} & \textbf{Valid size} & \textbf{Connected} & \textbf{Degree Gini} & \textbf{Hubiness} \\
+\midrule
+Attention RL ordering & 41.4140 & 1.0000 & 0.9960 & 0.3081 & 0.3855 \\
+\bottomrule
+\end{tabular}
+\caption{Final Attention RL ordering results on freshly sampled Barab\'asi--Albert graphs.}
+\label{tab:ba-rl-final}
+\end{table}
+
+The most important result is that Attention RL ordering achieves a valid-size ratio of $1.0000$ and a connected ratio of $0.9960$. This places the learned method very close to the best connectivity behavior observed among the deterministic baselines, while also preserving perfect size validity. The average generated size is $41.414$, which is much closer to the target BA range than the smaller graphs produced by BFS. This indicates that the learned policy does not simply copy BFS connectivity behavior; it finds a different region of the trade-off space.
+
+The degree Gini coefficient of $0.3081$ is lower than the strongest deterministic hub-oriented baselines, especially degree ordering and DFS. However, hubiness is $0.3855$, which is competitive with the strongest hubiness values and higher than degree, spectral, and LexBFS under the deterministic protocol. This suggests that the learned method preserves a dominant-hub signal even when the global degree inequality is less extreme. In practical terms, the generated graphs are connected and size-valid while still retaining a meaningful hub structure.
+
+Table~\ref{tab:ba-comparison-full} provides a comprehensive comparison including the two learned-ordering configurations alongside the full set of deterministic baselines. The table makes explicit what a single deterministic ordering cannot achieve: no fixed heuristic simultaneously occupies the top positions in valid-size ratio, connectivity, and hubiness. The comparison with Degree ordering is particularly revealing: both methods achieve perfect valid-size ratio, but Attention RL ordering raises connectivity from $0.6490$ to $0.9960$ while also improving hubiness from $0.3326$ to $0.3855$. This shows that the learned policy does not merely reproduce the Degree initialization; reinforcement learning refines that hub-oriented prior into a substantially stronger global serialization strategy.
+
+\begin{table}[H]
+\centering
+\footnotesize
+\begin{tabular}{lrrrrr}
+\toprule
+\textbf{Method} & \textbf{Avg. size} & \textbf{Valid size} & \textbf{Connected} & \textbf{Degree Gini} & \textbf{Hubiness} \\
+\midrule
+BFS                       & 27.3110 & 0.8130 & 1.0000 & 0.2923 & 0.4282 \\
+Degeneracy                & 37.0770 & 0.9670 & 0.9740 & 0.3287 & 0.3993 \\
+MCS                       & 40.5150 & 0.9670 & 0.9110 & 0.3323 & 0.3886 \\
+DFS                       & 40.8660 & 0.9630 & 0.8280 & 0.3411 & 0.4202 \\
+Random                    & 46.2100 & 0.9940 & 0.7930 & 0.3328 & 0.3460 \\
+Degree                    & 50.3650 & 1.0000 & 0.6490 & 0.3516 & 0.3326 \\
+Spectral                  & 48.4210 & 0.9910 & 0.6010 & 0.3184 & 0.3085 \\
+LexBFS                    & 50.2580 & 0.9540 & 0.4910 & 0.3358 & 0.3237 \\
+\midrule
+RL GCN ordering           & 39.3220 & 1.0000 & 0.6334 & 0.3272 & 0.3443 \\
+\textbf{Attention RL ordering} & \textbf{41.4140} & \textbf{1.0000} & \textbf{0.9960} & \textbf{0.3081} & \textbf{0.3855} \\
+\bottomrule
+\end{tabular}
+\caption{Comparison of BA results under deterministic node orderings and the two RL-learned orderings.}
+\label{tab:ba-comparison-full}
+\end{table}
+
+The progression from RL GCN ordering to Attention RL ordering captures the impact of the three architectural changes introduced in the final configuration. The attention-based encoder brings transformer-style neighborhood weighting into the ordering decisions, allowing the policy to assign different importance to different neighbors depending on the current structural context. The deeper three-layer message-passing stack enlarges the receptive field available before each selection step, enabling decisions to reflect a broader portion of the graph topology. The degree-based warm start gives the controller an explicitly hub-aware prior from the beginning, after which reinforcement learning refines that prior toward a better global compromise between size, connectivity, and BA-style structural organization. Together these changes move the learned policy from a regime in which connectivity was the main weakness to one in which connectivity is nearly perfect.
+
+\section{Loss Evolution Across Outer Iterations}
+\label{sec:results-loss-evolution}
+
+The validation and test loss curves in Figure~\ref{fig:ba-nll-evolution-loops} are essential for interpreting the learned method. They show the behavior of the coupled policy-generator system across outer iterations. Rather than training a generator once under a fixed sequence rule, the method repeatedly updates the ordering policy and retrains the generator on the resulting sequences. The decreasing loss trajectory indicates that the learned orderings become increasingly compatible with the downstream generator.
+
+\begin{figure}[H]
+    \centering
+    \maybeincludegraphics[width=0.75\linewidth]{figures/loss_output_new_run.png}
+    \caption{Validation and test loss across outer iterations of the Attention RL ordering procedure. The best validation checkpoint is reached at outer iteration~61, indicated by the dashed line. The trajectory remains oscillatory, as expected in an alternating RL--DGMG setting, but the late emergence of the best checkpoint shows that the policy continues to explore and refine the ordering space rather than collapsing prematurely.}
+    \label{fig:ba-nll-evolution-loops}
+\end{figure}
+
+The Attention RL ordering remains competitive over a much longer optimization horizon than the GCN baseline and reaches its best validation checkpoint only at outer iteration 61. Although the trajectory remains oscillatory, as expected in an alternating RL--DGMG setting, the late best checkpoint indicates that the stronger policy continues refining the ordering space instead of collapsing prematurely to a suboptimal solution. The figure is shown up to outer iteration 62 rather than stopping exactly at the best point: iteration 61 is the selected checkpoint, while iteration 62 is included to make explicit the stopping logic based on the difference between consecutive loss values.
+
+This loss behavior is important because structural metrics alone could be misleading. A generator might produce connected graphs by collapsing to a narrow subset of structures, or it might obtain good size control without learning the full action distribution. By monitoring validation and test loss, the experiment checks that the method also improves predictive fit. The final checkpoint is therefore supported by both likelihood-based and sample-based evidence.
+
+\section{Interpretation}
+\label{sec:results-interpretation}
+
+The final results support the central claim of the dissertation in three ways. First, deterministic orderings strongly affect performance even when the generator architecture is unchanged. This establishes ordering as a real modeling variable. Second, the best deterministic ordering depends on topology and metric. This shows that no fixed rule should be assumed optimal in general. Third, Attention RL ordering learns a strong compromise on BA graphs, combining size validity, near-perfect connectivity, and meaningful hub structure.
+
+The learned policy should be understood as a structural controller. It does not generate graphs directly; DGMG remains the graph generator. The policy controls how each training graph is exposed to the generator. By changing this exposure, it changes the conditional histories used for training and therefore changes what the generator learns. This separation is conceptually important because it means learned ordering can, in principle, be attached to other sequential graph generators that depend on graph-to-sequence conversion.
+
+The results also show why the BA setting is harder than the earlier synthetic families. In cycles, trees, binary trees, and stars, one can define a precise validity predicate. In BA graphs, several structural properties matter simultaneously. A method that optimizes only one may harm another. Attention RL ordering is promising because it moves toward a balanced region of the metric space rather than maximizing a single structural statistic. Attention RL ordering is the only method in the comparison that simultaneously achieves perfect valid-size ratio, near-perfect connectivity, realistic graph size, and competitive hub-oriented structure, making it a genuinely strong alternative to handcrafted orderings.
+
+\section{Limitations}
+\label{sec:results-limitations}
+
+The results should be interpreted with limitations in mind. The experiments use synthetic graph families, which are valuable for controlled analysis but do not capture the full complexity of molecular, social, or biological graph distributions. The learned-ordering method is also more computationally expensive than deterministic preprocessing because it requires an outer loop that couples policy learning with generator training. As noted in the experimental protocol, the full Attention RL run on BA graphs required approximately 7 hours on the MacBook M1 hardware used in this dissertation. In addition, the reward is based on validation and sample metrics, which means that its quality depends on the evaluation budget and on the choice of metric weights.
+
+Another limitation is that the policy-gradient estimator can have high variance. The final method mitigates this issue with an attention-based architecture, additional graph layers, and a degree warm start, but further variance-reduction techniques such as actor-critic methods or importance sampling could improve stability. Finally, the learned policy is evaluated primarily on BA graphs in the final version of the dissertation. Extending the learned-ordering experiments to larger real-world datasets remains an important direction for future work.
+
+\section{Chapter Summary}
+\label{sec:results-summary}
+
+This chapter showed that deterministic orderings produce large and interpretable differences in DGMG performance. The best ordering is topology-dependent: LexBFS and DFS are strongest for cycles, BFS is strongest for trees and binary trees, degree ordering is strongest for stars, and BA graphs exhibit trade-offs among connectivity, size, and hub structure. The GCN RL ordering confirmed the viability of the learned-ordering framework but did not overcome the connectivity limitation. The final Attention RL ordering method improves this trade-off on BA graphs, achieving perfect valid-size ratio, near-perfect connectivity, realistic average size, and competitive hubiness. These results support the dissertation's main thesis that node ordering should be treated as an optimization target in autoregressive graph generation.

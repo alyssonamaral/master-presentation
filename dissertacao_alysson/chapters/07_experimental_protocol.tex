@@ -1,0 +1,60 @@
+%========================
+% chapters/07_experimental_protocol.tex
+%========================
+\chapter{Experimental Protocol}
+\label{chap:experimental-protocol}
+
+This chapter describes the datasets, baselines, metrics, and implementation protocol used to evaluate deterministic and learned node orderings. The experiments are designed to isolate the effect of ordering while keeping the downstream generator fixed. The central question is whether the sequence induced by an ordering makes an autoregressive model algorithm better or worse at learning the target graph family.
+
+\section{Graph Families}
+\label{sec:protocol-graph-families}
+
+The deterministic study uses five synthetic graph families. Cycles are included because they require a clean ring structure and make the effect of path-like orderings easy to observe. Trees are included because they test whether an ordering preserves parent-child locality and acyclicity. Binary trees add a stricter branching constraint, making them a more demanding version of the tree setting. Stars isolate the effect of hub exposure: once the hub appears early, most destination decisions become simple. Barab\'asi--Albert graphs are included because they are less rigid than the other families and combine growth, sparse connectivity, and heavy-tailed degree structure.
+
+The final learned-ordering experiments focus on Barab\'asi--Albert (BA) graphs. This choice is motivated by the fact that BA graphs expose a real trade-off among metrics. A model can generate graphs with good size but weak connectivity, or graphs with strong connectivity but weaker hub statistics. This makes the family more informative for learned ordering than a setting in which one exact validity predicate dominates the evaluation. The dataset is generated with the standard BA preferential-attachment mechanism using attachment parameter $m_{\mathrm{BA}}=2$ and target size range $N\in[20,60]$. It contains 6000 training graphs, 750 validation graphs, and 750 test graphs.
+
+\section{Ordering Baselines}
+\label{sec:protocol-baselines}
+
+The deterministic baselines are degree ordering, BFS, DFS, degeneracy, LexBFS, MCS, spectral ordering, and random ordering. Each baseline is applied before translation, and the resulting action sequences are used to train the same DGMG architecture. The learned method is compared against these baselines under the same BA protocol. This comparison is intentionally strict: the only intended change is the mechanism that chooses the ordering.
+
+Two learned-ordering configurations are evaluated. The first is an RL policy parameterized by a Graph Convolutional Network (GCN) \cite{kipf2017gcn}, which serves as a direct predecessor and establishes that the general learned-ordering framework is viable. The second and final configuration is referred to as Attention RL ordering. It differs from the earlier GCN policy by using an attention-based graph layer, increasing the policy depth to three graph layers, and initializing the first iteration with degree ordering. %These changes were introduced after observing that pure exploration in the space of permutations is unstable, especially in graphs whose structural identity depends strongly on hubs.
+
+\section{Training and Evaluation}
+\label{sec:protocol-training-evaluation}
+
+For each deterministic baseline, the training graphs are first ordered by the corresponding heuristic. The graph-to-sequence translator then creates action sequences, and DGMG is trained with teacher-forced negative log-likelihood. Validation NLL is monitored during training, and generated samples are evaluated using structural metrics. This protocol ensures that differences in the results can be attributed to the ordering-induced sequences rather than to changes in model capacity.
+
+For the GCN RL policy, DGMG is coupled with the learned ordering described in Chapter~\ref{chap:rl-ordering}, with the generator kept fixed at hidden dimension $H=16$, message-passing rounds $T=2$, learning rate $\alpha=10^{-4}$, batch size 1, and 25 training epochs per update stage.
+
+For Attention RL ordering, training uses the alternating procedure described in Chapter~\ref{chap:rl-ordering}. The GCN-style encoder is replaced by an attention-based graph encoder implemented in PyTorch, using transformer-style attention to let the controller weigh structural cues more adaptively when selecting the next node in the ordering. The policy depth is increased to three graph layers, and the first outer iteration is warm-started from the degree ordering. Each subsequent outer iteration generates orderings, updates DGMG, evaluates the generator, and updates the policy. Validation and test losses are tracked across outer iterations, and the best checkpoint is selected according to a convergence criterion based on the difference between consecutive loss values across outer iterations.
+
+\section{Metrics}
+\label{sec:protocol-metrics}
+
+The metrics depend on the graph family. For cycles, the main metric is the cycle ratio, which measures the fraction of generated graphs satisfying the cycle predicate. For trees, the tree ratio measures acyclicity and connectivity. For binary trees, the binary-tree ratio additionally checks the branching constraint. For stars, the star ratio measures whether the generated graph has the expected single-hub structure. In all these families, valid-size ratio is also reported because a graph with the correct structure but incorrect size range is not considered fully satisfactory.
+
+For Barab\'asi--Albert graphs, evaluation is necessarily multi-objective. The valid-size ratio measures whether generated graphs fall in the expected node-count range. The connected ratio measures whether generated graphs are connected. The average size and average number of edges capture whether the model reproduces the scale of the target distribution. The degree Gini coefficient measures inequality in the degree distribution, with higher values indicating stronger concentration of degree mass in a subset of nodes. Hubiness measures how dominant the largest hub is relative to the rest of the graph. These metrics are interpreted together because BA graphs do not have a single exact predicate that fully defines validity. Validation NLL is also monitored during training to ensure that structural metrics are supported by evidence of predictive fit.
+
+\section{Computational Setup}
+\label{sec:protocol-computational-setup}
+
+All experiments were conducted on an Apple MacBook Pro equipped with an Apple M1 chip (2020), 8~GB of unified memory, and running macOS. The M1 chip integrates an 8-core CPU (four performance cores and four efficiency cores) and a 7-core GPU, with a 16-core Neural Engine. Although not a dedicated high-performance computing platform, the M1 architecture's unified memory design provides efficient data movement between the CPU and the on-chip accelerator, which is particularly relevant for the iterative alternating-optimization procedure that repeatedly loads model states and evaluates structural metrics.
+
+The deterministic ordering experiments are computationally inexpensive, as each baseline requires only a single preprocessing pass followed by standard teacher-forced training. The learned-ordering procedure is substantially more demanding because it interleaves repeated policy updates with full DGMG retraining stages. For the Attention RL ordering run on Barab\'asi--Albert graphs, where the best validation checkpoint was reached at outer iteration 61, the complete alternating optimization procedure required approximately 7 hours of wall-clock time on the described hardware. This cost reflects the depth of the alternating loop, the size of the BA training set, and the additional overhead of sampling generated graphs for structural evaluation at each outer iteration.
+
+These timing figures should be interpreted as indicative of the computational profile of the method rather than as absolute benchmarks, since runtimes depend on software implementation, dataset size, and hardware configuration. The purpose of reporting them is to situate the practical cost of treating node ordering as an optimization target relative to the negligible cost of applying a deterministic heuristic.
+
+\begin{figure}[H]
+    \centering
+    \maybeincludegraphics[width=0.72\linewidth]{figures/rl_entropy_mean.png}
+    \caption{Policy-entropy diagnostic across RL outer iterations, showing the mean entropy of the policy distribution over unselected nodes. The decreasing trend indicates that the policy becomes increasingly concentrated over the course of training, which is consistent with the transition from wide exploration to more confident node selection.}
+    \label{fig:rl-entropy-mean}
+\end{figure}
+
+\section{Reproducibility Considerations}
+\label{sec:protocol-reproducibility}
+
+The experiments rely on stochastic training, stochastic sampling, and in the learned-ordering case stochastic policy trajectories. For this reason, the results should be interpreted through repeated evaluation on fresh samples rather than through a single generated graph. The BA results are reported on freshly sampled generated graphs, which is important because validation loss alone does not guarantee structural fidelity. The protocol therefore combines likelihood-based evidence with sample-based structural evidence.
+
+A second reproducibility concern is the cost of the alternating RL procedure. Deterministic orderings are inexpensive preprocessing steps, while learned ordering requires repeated policy and generator updates. The purpose of the dissertation is not to claim that learned ordering is always cheaper than heuristics. Rather, it shows that ordering is sufficiently important to justify treating it as an object of optimization, especially when handcrafted heuristics exhibit trade-offs or fail to dominate across metrics. The source code for the experiments is publicly available at \url{https://github.com/prunebr/learning_to_order}.
