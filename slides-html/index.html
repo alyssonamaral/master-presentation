@@ -53,6 +53,16 @@
         background: #f6fbff;
         box-shadow: 0 6px 20px rgba(19, 49, 74, 0.06);
       }
+      .reveal .box-accent {
+        border: 2px solid #68a9e0;
+        border-radius: 12px;
+        padding: 18px 22px;
+        margin: 14px 0;
+        background: #f0f7ff;
+        box-shadow: 0 6px 20px rgba(19, 49, 74, 0.08);
+        text-align: center;
+        font-size: 1.05em;
+      }
       .reveal .two-col {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -65,15 +75,11 @@
         gap: 24px;
         align-items: center;
       }
-      .reveal .timeline {
+      .reveal .three-col {
         display: grid;
-        grid-template-columns: 140px 1fr;
-        gap: 10px 20px;
-        font-size: 0.88em;
-      }
-      .reveal .timeline div:nth-child(odd) {
-        font-weight: 600;
-        color: #12355b;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 16px;
+        align-items: start;
       }
       .reveal code {
         background: #edf2f7;
@@ -120,312 +126,739 @@
         box-shadow: none;
         background: transparent;
       }
+      .reveal .step-flow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        font-size: 0.82em;
+        margin: 14px 0;
+      }
+      .reveal .step-flow .step {
+        background: #dbeeff;
+        color: #0b3f6f;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-weight: 600;
+      }
+      .reveal .step-flow .arrow {
+        color: #68a9e0;
+        font-size: 1.3em;
+        font-weight: 700;
+      }
+      .reveal .result-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.78em;
+        margin: 10px 0;
+      }
+      .reveal .result-table th {
+        background: #0f2742;
+        color: #fff;
+        padding: 8px 10px;
+        text-align: left;
+        font-weight: 600;
+      }
+      .reveal .result-table td {
+        padding: 7px 10px;
+        border-bottom: 1px solid #dbe7f3;
+      }
+      .reveal .result-table tr:nth-child(even) {
+        background: #f6fbff;
+      }
+      .reveal .result-table .highlight {
+        background: #dbeeff;
+        font-weight: 700;
+      }
+      .reveal .numbered-list {
+        counter-reset: item;
+        list-style: none;
+        padding-left: 0;
+      }
+      .reveal .numbered-list li {
+        counter-increment: item;
+        margin-bottom: 10px;
+        padding-left: 36px;
+        position: relative;
+      }
+      .reveal .numbered-list li::before {
+        content: counter(item);
+        position: absolute;
+        left: 0;
+        top: 2px;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: #0f2742;
+        color: #fff;
+        font-size: 0.72em;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .reveal .innovation-card {
+        background: #f6fbff;
+        border: 1px solid #dbe7f3;
+        border-radius: 10px;
+        padding: 14px 16px;
+      }
+      .reveal .innovation-card h4 {
+        color: #0f2742;
+        margin: 0 0 6px 0;
+        font-size: 0.88em;
+      }
+      .reveal .innovation-card p {
+        margin: 0;
+        font-size: 0.78em;
+        color: #4a5568;
+      }
+      .reveal .quote-block {
+        font-style: italic;
+        font-size: 1.1em;
+        color: #12355b;
+        border-left: 5px solid #68a9e0;
+        padding: 16px 22px;
+        margin: 20px 0;
+        background: #f5faff;
+        border-radius: 0 10px 10px 0;
+      }
     </style>
   </head>
   <body>
     <div class="reveal">
       <div class="slides">
+
+        <!-- ============================================================ -->
+        <!-- BLOCO 1 — Motivação e Contextualização                       -->
+        <!-- ============================================================ -->
+
+        <!-- Slide 1 — Título -->
         <section class="title-slide">
-          <h2>Learning Node Orderings for Autoregressive Graph Generation</h2>
-          <p>Alysson Amaral da Silva</p>
-          <p class="muted">Dissertação de Mestrado - PPGInf/UFPR</p>
-          <p class="small">Orientador: Prof. Dr. Andre Luis Vignatti</p>
+          <h2>Learning Node Orderings for<br>Autoregressive Graph Generation</h2>
+          <p style="margin-top: 28px;">Alysson Amaral da Silva</p>
+          <p class="muted">Orientador: Prof. Dr. Andre Luis Vignatti</p>
+          <p class="muted">Programa de Pós-Graduação em Informática — UFPR</p>
+          <p class="small muted" style="margin-top: 20px;">2025</p>
         </section>
 
+        <!-- Slide 2 — Grafos estão em todo lugar -->
         <section>
-          <h3>Sumário</h3>
-          <ol>
-            <li class="fragment">Motivação: por que ordenação importa em geração de grafos</li>
-            <li class="fragment">Matriz de adjacência -> sequência de decisões</li>
-            <li class="fragment">Resultados com ordenações determinísticas</li>
-            <li class="fragment">Reinforcement Learning para ordenação</li>
-            <li class="fragment">Resultados finais em Barabási-Albert</li>
-            <li class="fragment">Conclusões, limitações e próximos passos</li>
-          </ol>
+          <h3>Grafos estão em todo lugar</h3>
+          <div class="two-col">
+            <div>
+              <ul>
+                <li class="fragment">Moléculas (átomos + ligações)</li>
+                <li class="fragment">Redes sociais (pessoas + conexões)</li>
+                <li class="fragment">Circuitos (componentes + fios)</li>
+                <li class="fragment">Grafos de conhecimento (entidades + relações)</li>
+              </ul>
+            </div>
+            <div class="fragment">
+              <div class="box">
+                <strong>Objetivo:</strong> aprender a <em>gerar</em> novos grafos a partir de dados observados — descoberta de fármacos, design de materiais, modelagem de redes.
+              </div>
+            </div>
+          </div>
         </section>
 
+        <!-- Slide 3 — O problema central -->
         <section>
-          <h3>Problema central</h3>
+          <h3>O problema central: invariância a permutação</h3>
+          <div class="box-accent">
+            Um grafo com \(n\) nós admite até \(n!\) permutações de rótulos — todas representam o <strong>mesmo</strong> grafo.
+          </div>
           <ul>
-            <li class="fragment">Modelos autoregressivos de grafos precisam serializar um grafo para treinar.</li>
-            <li class="fragment">O mesmo grafo permite muitas ordenações de nós.</li>
-            <li class="fragment">Cada ordenação muda o histórico condicional visto pelo gerador.</li>
-            <li class="fragment"><strong>Tese:</strong> ordenação é uma variável de modelagem.</li>
+            <li class="fragment">Redes neurais operam sobre tensores e sequências <strong>ordenadas</strong>.</li>
+            <li class="fragment">Para treinar um modelo, precisamos fixar uma ordem dos nós.</li>
+            <li class="fragment">Tensão fundamental: estrutura invariante vs. representação ordenada.</li>
           </ul>
         </section>
 
+        <!-- Slide 4 — De grafo para sequência de ações -->
         <section>
-          <h3>DGMG em uma frase</h3>
+          <h3>De grafo para sequência de ações</h3>
+          <p>Dado um grafo \(G = (V, E)\) e uma ordenação \(\sigma = (v_1, \ldots, v_n)\):</p>
+          <div class="step-flow fragment">
+            <span class="step">AddNode</span>
+            <span class="arrow">&rarr;</span>
+            <span class="step">AddEdge</span>
+            <span class="arrow">&rarr;</span>
+            <span class="step">ChooseDest</span>
+            <span class="arrow">&rarr;</span>
+            <span class="step">StopEdge</span>
+            <span class="arrow">&rarr;</span>
+            <span class="step">&hellip;</span>
+            <span class="arrow">&rarr;</span>
+            <span class="step">StopNode</span>
+          </div>
+          <div class="two-col fragment">
+            <div>
+              <p class="small"><strong>Ordenação A:</strong> \(\sigma_A = [1,2,3,4,5]\)</p>
+              <p class="small"><code>[AddNode, StopEdge, AddNode, AddEdge, ChooseDest(1), StopEdge, …]</code></p>
+            </div>
+            <div>
+              <p class="small"><strong>Ordenação B:</strong> \(\sigma_B = [3,5,1,4,2]\)</p>
+              <p class="small"><code>[AddNode, StopEdge, AddNode, AddEdge, ChooseDest(1), StopEdge, …]</code></p>
+              <p class="small muted">Mesmos tokens, destinos diferentes!</p>
+            </div>
+          </div>
+          <div class="formula fragment">
+            Mudar a ordenação dos nós muda <strong>toda</strong> a sequência de decisões que o modelo vê durante o treino.
+          </div>
+        </section>
+
+        <!-- Slide 5 — Geradores autorregressivos -->
+        <section>
+          <h3>Geradores autorregressivos de grafos</h3>
           <div class="box">
-            O DGMG constrói o grafo por decisões sequenciais:
-            <code>AddNode</code> -> <code>AddEdge</code> -> <code>ChooseDest</code> -> <code>Stop</code>.
+            Modelos que constroem grafos <strong>passo a passo</strong>, por decisões locais condicionadas no histórico de construção.
           </div>
           <ul>
-            <li class="fragment">Durante treino, o modelo recebe sequência supervisionada.</li>
-            <li class="fragment">Essa sequência vem de \( \mathcal{T}(G,\sigma) \), isto é, grafo + ordenação.</li>
-            <li class="fragment">Logo, mudar \( \sigma \) altera o problema aprendido sem mudar arquitetura.</li>
+            <li class="fragment">A cada passo, o modelo decide: adicionar nó? adicionar aresta? para qual destino?</li>
+            <li class="fragment">O treino usa <em>teacher forcing</em> sobre a sequência supervisionada.</li>
+            <li class="fragment">Diversas abordagens na literatura (GraphRNN, GRAN, etc.).</li>
+            <li class="fragment">Neste trabalho, usamos o <strong>DGMG</strong> como ambiente controlado.</li>
           </ul>
         </section>
 
-        <section>
-          <h3>Da matriz para sequência (igual à qualificação)</h3>
-          <p>Para um grafo \(G=(V,E)\) e ordenação \(\sigma=(v_1,\ldots,v_n)\):</p>
-          <ol>
-            <li>Adicionar \(v_i\) com <code>AddNode</code>.</li>
-            <li>Para cada aresta retroativa \((v_i,v_j)\) com \(j &lt; i\):
-              <code>AddEdge</code> + <code>ChooseDest(j)</code>.
-            </li>
-            <li>Emitir <code>StopEdge</code> para encerrar o nó corrente.</li>
-            <li>No fim, emitir <code>StopNode</code>.</li>
-          </ol>
-          <div class="formula">
-            Comprimento da sequência: \(L = 3|V| + 2|E| + 1\)
-          </div>
-        </section>
-
-        <section>
-          <h3>Exemplo didático</h3>
-          <div class="two-col-compact">
-            <div>
-              <p><strong>Grafo de exemplo</strong> (arestas):</p>
-              <p class="small">(1,2), (1,3), (3,4), (2,5)</p>
-              <p><strong>Ordenação</strong>: \(\sigma = [1,2,3,4,5]\)</p>
-            </div>
-            <div>
-              <p><strong>Prefixo da sequência</strong>:</p>
-              <p class="small">
-                <code>[AddNode, StopEdge, AddNode, AddEdge, ChooseDest(1), StopEdge, ...]</code>
-              </p>
-              <p class="muted">O mesmo grafo, com outra ordem, gera outra sequência.</p>
-            </div>
-          </div>
-        </section>
-
-        <section>
-          <h3>Intuição: ordenação molda a entropia do ChooseDest</h3>
-          <ul>
-            <li>Se o destino correto está "óbvio" no prefixo, a decisão é fácil.</li>
-            <li>Se muitos nós anteriores são plausíveis, a distribuição fica difusa.</li>
-            <li>Ordenação boa reduz ambiguidade efetiva das decisões.</li>
-            <li>Isso varia por topologia (ciclo, árvore, estrela, BA).</li>
-          </ul>
-        </section>
-
-        <section>
-          <h3>Etapa 1 da dissertação: heurísticas determinísticas</h3>
-          <ul>
-            <li>Baselines: Degree, BFS, DFS, Degeneracy, LexBFS, MCS, Spectral, Random.</li>
-            <li>Famílias: ciclos, árvores, árvores binárias, estrelas e Barabási-Albert.</li>
-            <li>Objetivo: isolar efeito da ordenação mantendo o DGMG fixo.</li>
-          </ul>
-        </section>
-
-        <section>
-          <h3>Resumo dos resultados determinísticos</h3>
-          <ul>
-            <li class="fragment">Ciclos: LexBFS/DFS melhores (preservam comportamento de caminho + fechamento).</li>
-            <li class="fragment">Árvores e binárias: BFS melhor (localidade pai-filho na fronteira).</li>
-            <li class="fragment">Estrelas: Degree melhor (hub cedo simplifica decisões).</li>
-            <li class="fragment">BA: trade-off real entre tamanho, conectividade e estrutura de hubs.</li>
-          </ul>
-          <p class="muted">Não existe heurística única dominante -> motivação para aprender a ordenação.</p>
-        </section>
-
-        <section>
-          <h3>Por que BA é o cenário-chave</h3>
-          <ul>
-            <li>Não há um predicado único de validade.</li>
-            <li>É necessário equilibrar múltiplas métricas simultaneamente.</li>
-            <li>Heurísticas fixas ocupam pontos diferentes do espaço de trade-off.</li>
-            <li>Ambiente ideal para testar política adaptativa de ordenação.</li>
-          </ul>
-        </section>
-
+        <!-- Slide 6 — A pergunta da dissertação -->
         <section class="centered">
-          <h2>Contribuição principal (Capítulo 6)</h2>
-          <p>Aprender ordenação de nós com Reinforcement Learning</p>
-        </section>
-
-        <section>
-          <div class="tag">Capítulo 6 · Núcleo da defesa</div>
-          <h3>Formulação do problema</h3>
-          <div class="formula">
-            \[
-              \pi_\theta(\sigma \mid G), \quad \sigma \in \mathcal{O}_G
-            \]
+          <div class="tag">Pergunta central</div>
+          <div class="quote-block">
+            "A ordenação dos nós é um detalhe de implementação<br>ou uma escolha de modelagem com impacto real?"
           </div>
-          <ul>
-            <li>A ordenação amostrada é convertida em sequência pelo tradutor \( \mathcal{T}(G,\sigma) \).</li>
-            <li>DGMG é treinado nessa sequência.</li>
-            <li>Recompensa depende do desempenho gerativo downstream.</li>
-          </ul>
-          <div class="formula">
-            \[
-              \phi^\star(\theta) = \arg\min_{\phi}\;
-              \mathbb{E}_{G\sim\mathcal{D}}\;
-              \mathbb{E}_{\sigma\sim\pi_\theta(\cdot\mid G)}
-              \left[\mathcal{L}_{\mathrm{NLL}}(\phi,\mathcal{T}(G,\sigma))\right]
-            \]
-          </div>
-        </section>
-
-        <section>
-          <h3>MDP de ordenação</h3>
-          <ul>
-            <li class="fragment"><strong>Estado:</strong> \(s_t=(G,S_t)\), onde \(S_t\) é conjunto já selecionado.</li>
-            <li class="fragment"><strong>Ação:</strong> escolher próximo nó em \(V\setminus S_t\).</li>
-            <li class="fragment"><strong>Transição:</strong> adiciona o nó ao conjunto selecionado.</li>
-            <li class="fragment"><strong>Episódio:</strong> termina após selecionar todos os nós (permuta final).</li>
-            <li class="fragment"><strong>Recompensa:</strong> atrasada, após avaliar gerador treinado.</li>
-          </ul>
-          <div class="formula">
-            \[
-              \pi_\theta(\sigma\mid G)=\prod_{t=1}^{n}\pi_\theta(u_t\mid G,S_t)
-            \]
-          </div>
-        </section>
-
-        <section>
-          <h3>Função de recompensa composta</h3>
-          <div class="formula">
-            \[
-              R(\tau)=R_{\mathrm{pred}}(\tau)+\lambda\,R_{\mathrm{struct}}(\tau)
-            \]
-          </div>
-          <ul>
-            <li class="fragment">\(R_{\mathrm{pred}}\): ajuste preditivo (NLL de validação).</li>
-            <li class="fragment">\(R_{\mathrm{struct}}\): fidelidade estrutural em amostras geradas.</li>
-            <li class="fragment">Em BA, inclui tamanho válido, conectividade, desigualdade de grau e hubiness.</li>
-          </ul>
-        </section>
-
-        <section>
-          <h3>Arquitetura da política (Attention RL)</h3>
-          <ul>
-            <li class="fragment">Encoder de grafo com atenção + 3 camadas de message passing.</li>
-            <li class="fragment">Máscara de nós já escolhidos para garantir permutação válida.</li>
-            <li class="fragment">Score por nó com MLP combinando embedding local e contexto global.</li>
-            <li class="fragment">Warm start por Degree na primeira iteração externa.</li>
-          </ul>
-        </section>
-
-        <section>
-          <h3>Como treinamos (alternating optimization)</h3>
-          <ol>
-            <li>Política propõe ordenações para cada grafo de treino.</li>
-            <li>Tradutor gera sequências.</li>
-            <li>DGMG atualiza parâmetros por NLL teacher-forcing.</li>
-            <li>Calcula-se recompensa por validação + amostras estruturais.</li>
-            <li>Política atualiza com REINFORCE.</li>
-          </ol>
-          <p class="muted">Gerador e política co-adaptam ao longo das iterações.</p>
-          <div class="formula">
-            \[
-              \nabla_\theta J(\theta)=
-              \mathbb{E}\left[(R-b)\nabla_\theta\log\pi_\theta(\sigma\mid G)\right]
-            \]
-          </div>
-        </section>
-
-        <section>
-          <h3>Por que RL (e não backprop direta)?</h3>
-          <ul>
-            <li class="fragment">Escolha de nó é discreta.</li>
-            <li class="fragment">Impacto da escolha aparece apenas após treino/avaliação do gerador.</li>
-            <li class="fragment">Sem rótulo supervisionado de "ordenação correta".</li>
-            <li class="fragment">Policy gradient lida naturalmente com decisão discreta + recompensa atrasada.</li>
-          </ul>
-        </section>
-
-        <section>
-          <h3>Mensagem principal do Capítulo 6</h3>
-          <div class="box">
-            A ordenação deixa de ser uma heurística fixa e passa a ser parte treinável do modelo.
-          </div>
-          <ul>
-            <li class="fragment">Política pode imitar heurísticas quando útil.</li>
-            <li class="fragment">Também pode combinar comportamentos de forma híbrida ao longo da trajetória.</li>
-          </ul>
-        </section>
-
-        <section>
-          <h3>Resultados BA: baselines determinísticos vs RL</h3>
-          <div class="kpi-grid small">
-            <div class="kpi">Degree<br /><strong>valid-size = 1.0000</strong><br />connected = 0.6490</div>
-            <div class="kpi">BFS<br />valid-size = 0.8130<br /><strong>connected = 1.0000</strong></div>
-            <div class="kpi">RL GCN<br /><strong>valid-size = 1.0000</strong><br />connected = 0.6334</div>
-            <div class="kpi">Attention RL<br /><strong>valid-size = 1.0000</strong><br /><strong>connected = 0.9960</strong></div>
-          </div>
-          <p class="muted">
-            Attention RL combina validade de tamanho com conectividade quase perfeita.
+          <p class="fragment muted" style="margin-top: 24px;">
+            Tese: a ordenação é uma <strong>variável de modelagem</strong> — e pode ser <strong>otimizada</strong>.
           </p>
         </section>
 
+        <!-- ============================================================ -->
+        <!-- BLOCO 2 — Ordenações Determinísticas                         -->
+        <!-- ============================================================ -->
+
+        <!-- Slide 7 — O experimento controlado -->
         <section>
-          <h3>Figura: evolução de loss nas iterações externas</h3>
+          <div class="tag">Bloco 2 · Ordenações determinísticas</div>
+          <h3>O experimento controlado</h3>
+          <div class="two-col">
+            <div>
+              <p><strong>Princípio:</strong> arquitetura DGMG fixa, só muda a ordenação.</p>
+              <ul class="small">
+                <li>BFS</li>
+                <li>DFS</li>
+                <li>Degree (grau decrescente)</li>
+                <li>Degeneracy</li>
+                <li>LexBFS</li>
+                <li>MCS</li>
+                <li>Spectral</li>
+                <li>Random</li>
+              </ul>
+            </div>
+            <div>
+              <p><strong>Famílias de grafos:</strong></p>
+              <ul class="small">
+                <li>Ciclos</li>
+                <li>Árvores</li>
+                <li>Árvores binárias</li>
+                <li>Estrelas</li>
+                <li>Barabási–Albert</li>
+              </ul>
+              <p class="small muted" style="margin-top: 10px;">Isolar efeito da ordenação em topologias com propriedades bem definidas.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 8 — Cada topologia tem um favorito -->
+        <section>
+          <h3>Resultados: cada topologia tem um favorito</h3>
+          <table class="result-table">
+            <thead>
+              <tr>
+                <th>Topologia</th>
+                <th>Melhor ordenação</th>
+                <th>Intuição</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="fragment">
+                <td>Ciclos</td>
+                <td class="highlight">DFS / LexBFS</td>
+                <td>Preservam comportamento de caminho + fechamento do ciclo</td>
+              </tr>
+              <tr class="fragment">
+                <td>Árvores</td>
+                <td class="highlight">BFS</td>
+                <td>Localidade pai-filho na fronteira de expansão</td>
+              </tr>
+              <tr class="fragment">
+                <td>Estrelas</td>
+                <td class="highlight">Degree</td>
+                <td>Hub inserido primeiro simplifica todas as decisões</td>
+              </tr>
+              <tr class="fragment">
+                <td>Barabási–Albert</td>
+                <td class="highlight">Nenhuma domina</td>
+                <td>Trade-off complexo entre múltiplas métricas</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="muted fragment">Não existe heurística única universalmente ótima.</p>
+        </section>
+
+        <!-- Slide 9 — O caso Barabási-Albert -->
+        <section>
+          <h3>O caso Barabási–Albert em detalhe</h3>
+          <div class="kpi-grid small">
+            <div class="kpi">
+              <strong>BFS</strong><br>
+              valid-size = 0.8130<br>
+              connected = <strong>1.0000</strong><br>
+              <span class="muted">Conectividade perfeita, mas grafos pequenos</span>
+            </div>
+            <div class="kpi">
+              <strong>Degree</strong><br>
+              valid-size = <strong>1.0000</strong><br>
+              connected = 0.6490<br>
+              <span class="muted">Tamanho perfeito, mas conectividade baixa</span>
+            </div>
+            <div class="kpi">
+              <strong>DFS</strong><br>
+              valid-size = 0.9450<br>
+              connected = 0.8920<br>
+              <span class="muted">Compromisso, mas sem excelência</span>
+            </div>
+            <div class="kpi">
+              <strong>Random</strong><br>
+              valid-size = 0.7810<br>
+              connected = 0.5230<br>
+              <span class="muted">Baseline fraco em ambas métricas</span>
+            </div>
+          </div>
+          <div class="formula fragment">
+            Trade-off: nenhuma ordenação determinística domina <strong>simultaneamente</strong> tamanho, conectividade e estrutura de hubs.
+          </div>
+        </section>
+
+        <!-- Slide 10 — Ordenação como moldagem de entropia -->
+        <section>
+          <h3>Interpretação: ordenação molda a entropia das decisões</h3>
+          <div class="two-col">
+            <div>
+              <ul>
+                <li class="fragment">No passo <code>ChooseDest</code>, o modelo seleciona entre nós já inseridos.</li>
+                <li class="fragment">Se o destino correto é "óbvio" no prefixo, a decisão é fácil (baixa entropia).</li>
+                <li class="fragment">Se muitos nós anteriores são plausíveis, a distribuição fica difusa (alta entropia).</li>
+              </ul>
+            </div>
+            <div class="fragment">
+              <div class="box">
+                <strong>Localidade:</strong> boa ordenação tende a colocar vizinhos do nó atual próximos na sequência, reduzindo a ambiguidade efetiva das decisões.
+              </div>
+              <p class="small muted" style="margin-top: 10px;">A "qualidade" de uma ordenação depende da topologia — não há regra universal.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 11 — Conclusão do bloco / motivação -->
+        <section class="centered">
+          <h3>Conclusão do bloco</h3>
+          <div class="quote-block">
+            "Nenhuma heurística fixa é universalmente ótima.<br>E se a ordenação fosse <strong>aprendida</strong>?"
+          </div>
+          <p class="fragment muted" style="margin-top: 18px;">
+            Motivação para a contribuição principal: usar Reinforcement Learning para aprender a ordenação.
+          </p>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- BLOCO 3 — Contribuição Principal: Ordenação com RL           -->
+        <!-- ============================================================ -->
+
+        <!-- Slide 12 — Formulação do problema -->
+        <section>
+          <div class="tag">Bloco 3 · Contribuição principal</div>
+          <h3>Formulação bilevel</h3>
+          <div class="two-col">
+            <div>
+              <div class="box">
+                <strong>Nível superior:</strong><br>
+                Política \(\pi_\theta(\sigma \mid G)\)<br>
+                <span class="small muted">Escolhe a ordenação dos nós</span>
+              </div>
+            </div>
+            <div>
+              <div class="box">
+                <strong>Nível inferior:</strong><br>
+                Gerador DGMG \(p_\phi\)<br>
+                <span class="small muted">Treina com a sequência resultante</span>
+              </div>
+            </div>
+          </div>
+          <div class="formula fragment">
+            \[
+              \phi^\star(\theta) = \arg\min_\phi\;
+              \mathbb{E}_{G \sim \mathcal{D}}\;
+              \mathbb{E}_{\sigma \sim \pi_\theta(\cdot \mid G)}
+              \left[\mathcal{L}_{\text{NLL}}(\phi, \mathcal{T}(G, \sigma))\right]
+            \]
+          </div>
+          <p class="muted fragment">A política quer maximizar a qualidade gerativa do gerador treinado.</p>
+        </section>
+
+        <!-- Slide 13 — O MDP -->
+        <section>
+          <h3>O Processo de Decisão de Markov</h3>
+          <ul>
+            <li class="fragment"><strong>Estado:</strong> \(s_t = (G, S_t)\), onde \(S_t \subseteq V\) é o conjunto de nós já selecionados.</li>
+            <li class="fragment"><strong>Ações:</strong> escolher próximo nó em \(V \setminus S_t\).</li>
+            <li class="fragment"><strong>Transição:</strong> \(S_{t+1} = S_t \cup \{u_t\}\).</li>
+            <li class="fragment"><strong>Episódio:</strong> termina quando \(|S_t| = n\) (permutação completa).</li>
+            <li class="fragment"><strong>Recompensa:</strong> atrasada — atribuída após treinar e avaliar o gerador.</li>
+          </ul>
+          <div class="formula fragment">
+            \[
+              \pi_\theta(\sigma \mid G) = \prod_{t=1}^{n} \pi_\theta(u_t \mid G, S_t)
+            \]
+          </div>
+          <p class="muted fragment">É um MDP <em>condicionado ao grafo</em>: cada grafo gera um episódio diferente.</p>
+        </section>
+
+        <!-- Slide 14 — Arquitetura da política -->
+        <section>
+          <h3>Arquitetura da política</h3>
+          <div class="step-flow">
+            <span class="step">GNN encoder</span>
+            <span class="arrow">&rarr;</span>
+            <span class="step">Pooling global</span>
+            <span class="arrow">&rarr;</span>
+            <span class="step">MLP score</span>
+            <span class="arrow">&rarr;</span>
+            <span class="step">Softmax mascarado</span>
+          </div>
+          <ul>
+            <li class="fragment">GNN codifica cada nó usando estrutura do grafo.</li>
+            <li class="fragment">Pooling agrega informação global para contexto.</li>
+            <li class="fragment">MLP pontua cada nó candidato (não selecionado).</li>
+            <li class="fragment">Softmax mascarado garante que nós já selecionados recebem probabilidade zero.</li>
+          </ul>
+          <div class="box fragment">
+            Indicador de nó já selecionado concatenado ao embedding — permite que a GNN distinga nós disponíveis de nós já ordenados.
+          </div>
+        </section>
+
+        <!-- Slide 15 — O reward composto -->
+        <section>
+          <h3>A recompensa: por que ela é composta?</h3>
+          <div class="formula">
+            \[
+              R(\tau) = R_{\text{pred}}(\tau) + \lambda\, R_{\text{struct}}(\tau)
+            \]
+          </div>
+          <div class="two-col">
+            <div>
+              <div class="box fragment">
+                <strong>\(R_{\text{pred}}\)</strong><br>
+                NLL de validação do DGMG treinado.<br>
+                <span class="small muted">Mede o quanto o gerador aprendeu a distribuição.</span>
+              </div>
+            </div>
+            <div>
+              <div class="box fragment">
+                <strong>\(R_{\text{struct}}\)</strong><br>
+                Métricas estruturais das amostras geradas.<br>
+                <span class="small muted">Tamanho válido, conectividade, Gini, hubiness.</span>
+              </div>
+            </div>
+          </div>
+          <div class="formula fragment">
+            <strong>Por que dois componentes?</strong> NLL baixo não garante grafos estruturalmente corretos — o modelo pode gerar grafos com boa likelihood mas topologia errada.
+          </div>
+        </section>
+
+        <!-- Slide 16 — Gradiente de política -->
+        <section>
+          <h3>Gradiente de política (Teorema 6.1)</h3>
+          <div class="formula">
+            \[
+              \nabla_\theta J(\theta) =
+              \mathbb{E}_{G \sim \mathcal{D}}\;
+              \mathbb{E}_{\sigma \sim \pi_\theta(\cdot \mid G)}
+              \left[(R(\tau) - b)\, \nabla_\theta \log \pi_\theta(\sigma \mid G)\right]
+            \]
+          </div>
+          <ul>
+            <li class="fragment"><strong>REINFORCE</strong>: estimador de gradiente via amostragem de trajetórias.</li>
+            <li class="fragment">A ordenação é <strong>discreta</strong> — backprop não passa pela seleção dos nós.</li>
+            <li class="fragment">A recompensa é <strong>atrasada</strong> — só existe após treino e avaliação do gerador.</li>
+            <li class="fragment">\(b\) é um baseline para redução de variância.</li>
+          </ul>
+          <p class="muted fragment">Policy gradient é a ferramenta natural: decisão discreta + reward não-diferenciável.</p>
+        </section>
+
+        <!-- Slide 17 — Otimização alternada -->
+        <section>
+          <h3>Otimização alternada (Algoritmo 2)</h3>
+          <div class="step-flow">
+            <span class="step">Política propõe \(\sigma\)</span>
+            <span class="arrow">&rarr;</span>
+            <span class="step">Tradutor gera sequência</span>
+            <span class="arrow">&rarr;</span>
+            <span class="step">DGMG treina</span>
+            <span class="arrow">&rarr;</span>
+            <span class="step">Avaliação</span>
+            <span class="arrow">&rarr;</span>
+            <span class="step">Update política</span>
+          </div>
+          <div style="text-align:center; margin: 10px 0;">
+            <span class="arrow" style="font-size: 1.5em;">&#x21ba;</span>
+            <span class="small muted">loop iterativo</span>
+          </div>
+          <ul>
+            <li class="fragment">A cada iteração externa, a política e o gerador se co-adaptam.</li>
+            <li class="fragment">O gerador melhora com as novas ordenações; a política melhora com o feedback do gerador.</li>
+            <li class="fragment">Necessário porque a qualidade de uma ordenação depende do estado atual do gerador.</li>
+          </ul>
+        </section>
+
+        <!-- Slide 18 — Attention RL: as três inovações -->
+        <section>
+          <h3>Attention RL Ordering: três inovações</h3>
+          <div class="three-col">
+            <div class="innovation-card fragment">
+              <h4>1. Encoder com atenção</h4>
+              <p>Mecanismo de atenção tipo transformer permite capturar dependências de longo alcance entre nós, além de vizinhos imediatos.</p>
+            </div>
+            <div class="innovation-card fragment">
+              <h4>2. Três camadas de message-passing</h4>
+              <p>Amplia o campo receptivo: cada nó "vê" vizinhos a 3 saltos, capturando estrutura mesoscópica.</p>
+            </div>
+            <div class="innovation-card fragment">
+              <h4>3. Warm start por grau</h4>
+              <p>Primeira iteração usa ordenação por grau decrescente como prior — acelera convergência e estabiliza treino inicial.</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 19 — Por que é diferente de uma heurística fixa? -->
+        <section>
+          <h3>Por que isso é diferente de uma heurística fixa?</h3>
+          <div class="two-col">
+            <div>
+              <ul>
+                <li class="fragment">Heurística fixa aplica <strong>sempre a mesma regra</strong> para todos os grafos, em todos os passos.</li>
+                <li class="fragment">A política pode <strong>misturar estratégias</strong> ao longo da trajetória.</li>
+                <li class="fragment">Exemplo: começar pelos hubs (como Degree) e terminar pela conectividade (como BFS).</li>
+              </ul>
+            </div>
+            <div class="fragment">
+              <div class="box">
+                <strong>Evidência:</strong> a entropia da política decresce ao longo do treino (Figura 7.1) — de exploração para decisões cada vez mais confiantes. A política <em>aprende</em> a se concentrar.
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- BLOCO 4 — Resultados                                         -->
+        <!-- ============================================================ -->
+
+        <!-- Slide 20 — Protocolo experimental -->
+        <section>
+          <div class="tag">Bloco 4 · Resultados</div>
+          <h3>Protocolo experimental (Barabási–Albert)</h3>
+          <div class="two-col">
+            <div>
+              <p><strong>Dataset:</strong></p>
+              <ul class="small">
+                <li>6000 grafos BA</li>
+                <li>\(m_{BA} = 2\)</li>
+                <li>\(N \in [20, 60]\)</li>
+              </ul>
+            </div>
+            <div>
+              <p><strong>Métricas:</strong></p>
+              <ul class="small">
+                <li><strong>valid-size ratio:</strong> fração com tamanho no intervalo correto</li>
+                <li><strong>connected ratio:</strong> fração de grafos conexos</li>
+                <li><strong>avg size:</strong> tamanho médio gerado</li>
+                <li><strong>Gini:</strong> desigualdade da distribuição de graus</li>
+                <li><strong>hubiness:</strong> concentração de grau nos nós de maior grau</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <!-- Slide 21 — GCN RL vs. Attention RL -->
+        <section>
+          <h3>GCN RL vs. Attention RL: a progressão</h3>
+          <div class="two-col">
+            <div>
+              <div class="box">
+                <strong>GCN RL (primeira versão)</strong>
+                <ul class="small">
+                  <li>valid-size = <strong>1.0000</strong></li>
+                  <li>connected = 0.6334</li>
+                </ul>
+                <p class="small muted">Prova a viabilidade de aprender a ordenação, mas falha em conectividade.</p>
+              </div>
+            </div>
+            <div>
+              <div class="box" style="border-color: #68a9e0;">
+                <strong>Attention RL (versão final)</strong>
+                <ul class="small">
+                  <li>valid-size = <strong>1.0000</strong></li>
+                  <li>connected = <strong>0.9960</strong></li>
+                </ul>
+                <p class="small muted">Atenção + 3 camadas + warm start resolvem o gap de conectividade.</p>
+              </div>
+            </div>
+          </div>
+          <p class="muted fragment">As mudanças arquiteturais são motivadas pela análise do modo de falha do GCN RL.</p>
+        </section>
+
+        <!-- Slide 22 — Tabela comparativa final -->
+        <section>
+          <h3>Comparação completa (Tabela 8.3)</h3>
+          <table class="result-table small">
+            <thead>
+              <tr>
+                <th>Método</th>
+                <th>valid-size</th>
+                <th>connected</th>
+                <th>avg size</th>
+                <th>hubiness</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Random</td>
+                <td>0.7810</td>
+                <td>0.5230</td>
+                <td>—</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td>BFS</td>
+                <td>0.8130</td>
+                <td><strong>1.0000</strong></td>
+                <td>—</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td>Degree</td>
+                <td><strong>1.0000</strong></td>
+                <td>0.6490</td>
+                <td>—</td>
+                <td>—</td>
+              </tr>
+              <tr>
+                <td>GCN RL</td>
+                <td><strong>1.0000</strong></td>
+                <td>0.6334</td>
+                <td>—</td>
+                <td>—</td>
+              </tr>
+              <tr class="highlight">
+                <td><strong>Attention RL</strong></td>
+                <td><strong>1.0000</strong></td>
+                <td><strong>0.9960</strong></td>
+                <td>—</td>
+                <td>competitivo</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="box fragment">
+            Attention RL é o <strong>único método</strong> que simultaneamente: valid-size = 1.0, connected &asymp; 1.0, e hubiness competitivo.
+          </div>
+        </section>
+
+        <!-- Slide 23 — Evolução da loss -->
+        <section>
+          <h3>Evolução da loss nas iterações externas</h3>
           <img
             class="clean"
             src="../dissertacao_alysson/figures/loss_output_new_run.png"
-            alt="Evolucao de loss"
-            style="max-height: 420px"
+            alt="Evolução de loss"
+            style="max-height: 400px;"
           />
-          <p class="small muted fragment">Melhor checkpoint por volta da iteração externa 61.</p>
+          <ul class="small">
+            <li class="fragment">Comportamento <strong>oscilatório</strong> — esperado em otimização alternada com RL.</li>
+            <li class="fragment">Melhor checkpoint na <strong>iteração 61</strong> — a política continua explorando ao invés de colapsar.</li>
+            <li class="fragment">Evidência de que o sistema não converge prematuramente.</li>
+          </ul>
         </section>
 
-        <section>
-          <h3>Figura: entropia média da política</h3>
-          <img
-            class="clean"
-            src="../dissertacao_alysson/figures/rl_entropy_mean.png"
-            alt="Entropia media RL"
-            style="max-height: 420px"
-          />
-          <p class="small muted fragment">Tendência de concentração: de exploração para decisões mais confiantes.</p>
-        </section>
-
+        <!-- Slide 24 — Interpretação dos resultados -->
         <section>
           <h3>Interpretação dos resultados</h3>
           <ul>
-            <li class="fragment">Ordenação é variável causal no desempenho de geradores sequenciais.</li>
-            <li class="fragment">Heurísticas fixas são úteis, mas topologia/métrica dependentes.</li>
-            <li class="fragment">Attention RL encontra compromisso forte no espaço multiobjetivo de BA.</li>
-            <li class="fragment">Contribuição: framework em que serialização é otimizada, não assumida.</li>
+            <li class="fragment">A política <strong>não copia</strong> a ordenação por grau — ela vai além do warm start.</li>
+            <li class="fragment">O RL <em>refina</em> o prior hub-aware para ganhar conectividade — estratégia híbrida genuína.</li>
+            <li class="fragment">Evidência: a entropia decresce, mas não colapsa — a política mantém diversidade onde necessário.</li>
           </ul>
+          <div class="box-accent fragment">
+            A ordenação aprendida combina intuições de múltiplas heurísticas de forma adaptativa, grafo a grafo.
+          </div>
         </section>
 
+        <!-- ============================================================ -->
+        <!-- BLOCO 5 — Conclusão                                          -->
+        <!-- ============================================================ -->
+
+        <!-- Slide 25 — Contribuições -->
         <section>
-          <h3>Limitações</h3>
-          <ul>
-            <li class="fragment">Avaliação principal de RL concentrada em grafos BA sintéticos.</li>
-            <li class="fragment">Custo computacional maior que heurísticas (execução completa ~7h no M1).</li>
-            <li class="fragment">Policy gradient pode ter alta variância.</li>
+          <div class="tag">Bloco 5 · Conclusão</div>
+          <h3>Contribuições da dissertação</h3>
+          <ul class="numbered-list">
+            <li class="fragment">
+              <strong>Análise empírica controlada</strong> do efeito de ordenações determinísticas no DGMG, mostrando que cada topologia favorece uma heurística diferente.
+            </li>
+            <li class="fragment">
+              <strong>Formulação do MDP de ordenação</strong> com recompensa composta (preditiva + estrutural), permitindo tratar a serialização como problema de otimização.
+            </li>
+            <li class="fragment">
+              <strong>Attention RL Ordering:</strong> método que atinge resultado forte em Barabási–Albert, sendo o único a equilibrar simultaneamente tamanho, conectividade e estrutura de hubs.
+            </li>
           </ul>
         </section>
 
+        <!-- Slide 26 — Limitações e trabalhos futuros -->
         <section>
-          <h3>Conclusões e contribuições</h3>
-          <ul>
-            <li class="fragment">Análise controlada do impacto de ordenações determinísticas no DGMG.</li>
-            <li class="fragment">Formulação de ordenação como MDP condicionado ao grafo.</li>
-            <li class="fragment">Método Attention RL com resultados fortes em BA.</li>
-            <li class="fragment">Evidência de que ordem de construção deve ser tratada como alvo de otimização.</li>
-          </ul>
+          <h3>Limitações e trabalhos futuros</h3>
+          <div class="two-col">
+            <div>
+              <p><strong>Limitações</strong></p>
+              <ul class="small">
+                <li class="fragment">Avaliação de RL concentrada em grafos BA sintéticos</li>
+                <li class="fragment">Custo computacional maior que heurísticas</li>
+                <li class="fragment">Alta variância do estimador REINFORCE</li>
+              </ul>
+            </div>
+            <div>
+              <p><strong>Trabalhos futuros</strong></p>
+              <ul class="small">
+                <li class="fragment">Datasets reais: moléculas, redes biológicas</li>
+                <li class="fragment">Redução de variância: actor-critic, importance sampling</li>
+                <li class="fragment">Análise interpretativa do que a política aprendeu</li>
+                <li class="fragment">Extensão para grafos com atributos e tipos de arestas</li>
+              </ul>
+            </div>
+          </div>
         </section>
 
-        <section>
-          <h3>Próximos passos</h3>
-          <ul>
-            <li class="fragment">Extender para datasets reais (molecular, biológico, social).</li>
-            <li class="fragment">Acoplar política de ordenação a geradores autoregressivos mais fortes.</li>
-            <li class="fragment">Testar actor-critic e técnicas adicionais de redução de variância.</li>
-            <li class="fragment">Analisar interpretabilidade de estratégias híbridas aprendidas.</li>
-          </ul>
-        </section>
-
+        <!-- Slide 27 — Mensagem final -->
         <section class="centered">
-          <h2>Obrigado!</h2>
-          <p>Perguntas e discussões</p>
+          <h2>Mensagem final</h2>
+          <div class="quote-block" style="margin: 30px auto; max-width: 900px;">
+            "A ordenação dos nós não é pré-processamento neutro — é parte do modelo.<br>
+            Tratá-la como alvo de otimização melhora a geração autorregressiva de grafos."
+          </div>
+          <p style="margin-top: 40px; font-size: 1.2em;">Obrigado!</p>
+          <p class="muted">Perguntas e discussões</p>
         </section>
+
       </div>
     </div>
 
