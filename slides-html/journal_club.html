@@ -1,0 +1,785 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Learning to Order — DS Journal Club</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css"
+      id="theme"
+    />
+    <style>
+      :root {
+        --r-main-font-size: 29px;
+        --r-heading-color: #0f2742;
+        --r-link-color: #005f99;
+      }
+      .reveal {
+        background: radial-gradient(circle at top right, #eef6ff 0%, #ffffff 55%);
+      }
+      .reveal h1,
+      .reveal h2,
+      .reveal h3 {
+        text-transform: none;
+        letter-spacing: -0.02em;
+      }
+      .reveal h2 {
+        margin-bottom: 24px;
+      }
+      .reveal section {
+        text-align: left;
+      }
+      .reveal section.title-slide,
+      .reveal section.centered {
+        text-align: center;
+      }
+      .reveal .muted {
+        color: #4a5568;
+        font-size: 0.82em;
+      }
+      .reveal .small {
+        font-size: 0.72em;
+      }
+      .reveal .box {
+        border: 1px solid #dbe7f3;
+        border-radius: 12px;
+        padding: 14px 18px;
+        margin: 10px 0;
+        background: #f6fbff;
+        box-shadow: 0 6px 20px rgba(19, 49, 74, 0.06);
+      }
+      .reveal .box-accent {
+        border: 2px solid #68a9e0;
+        border-radius: 12px;
+        padding: 18px 22px;
+        margin: 14px 0;
+        background: #f0f7ff;
+        box-shadow: 0 6px 20px rgba(19, 49, 74, 0.08);
+        text-align: center;
+        font-size: 1.05em;
+      }
+      .reveal .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 28px;
+        align-items: start;
+      }
+      .reveal .two-col-compact {
+        display: grid;
+        grid-template-columns: 1.1fr 0.9fr;
+        gap: 24px;
+        align-items: center;
+      }
+      .reveal .three-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr 1fr;
+        gap: 16px;
+        align-items: start;
+      }
+      .reveal code {
+        background: #edf2f7;
+        border-radius: 4px;
+        padding: 2px 6px;
+      }
+      .reveal .formula {
+        font-size: 0.88em;
+        background: #f5faff;
+        border-left: 4px solid #68a9e0;
+        border-radius: 8px;
+        padding: 12px 14px;
+        margin: 14px 0;
+      }
+      .reveal .tag {
+        display: inline-block;
+        font-size: 0.56em;
+        font-weight: 700;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #0b3f6f;
+        background: #dbeeff;
+        border-radius: 999px;
+        padding: 6px 10px;
+        margin-bottom: 10px;
+      }
+      .reveal .tag-alt {
+        background: #fde8d0;
+        color: #7a3b00;
+      }
+      .reveal .kpi-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+      }
+      .reveal .kpi {
+        border: 1px solid #dbe7f3;
+        border-radius: 10px;
+        padding: 10px 12px;
+        background: #fcfeff;
+      }
+      .reveal .kpi strong {
+        font-size: 1.05em;
+        color: #0f2742;
+      }
+      .reveal img.clean {
+        border: none;
+        box-shadow: none;
+        background: transparent;
+      }
+      .reveal .step-flow {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        flex-wrap: wrap;
+        font-size: 0.82em;
+        margin: 14px 0;
+      }
+      .reveal .step-flow .step {
+        background: #dbeeff;
+        color: #0b3f6f;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-weight: 600;
+      }
+      .reveal .step-flow .arrow {
+        color: #68a9e0;
+        font-size: 1.3em;
+        font-weight: 700;
+      }
+      .reveal .result-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.78em;
+        margin: 10px 0;
+      }
+      .reveal .result-table th {
+        background: #0f2742;
+        color: #fff;
+        padding: 8px 10px;
+        text-align: left;
+        font-weight: 600;
+      }
+      .reveal .result-table td {
+        padding: 7px 10px;
+        border-bottom: 1px solid #dbe7f3;
+      }
+      .reveal .result-table tr:nth-child(even) {
+        background: #f6fbff;
+      }
+      .reveal .result-table .highlight {
+        background: #dbeeff;
+        font-weight: 700;
+      }
+      .reveal .numbered-list {
+        counter-reset: item;
+        list-style: none;
+        padding-left: 0;
+      }
+      .reveal .numbered-list li {
+        counter-increment: item;
+        margin-bottom: 10px;
+        padding-left: 36px;
+        position: relative;
+      }
+      .reveal .numbered-list li::before {
+        content: counter(item);
+        position: absolute;
+        left: 0;
+        top: 2px;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: #0f2742;
+        color: #fff;
+        font-size: 0.72em;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .reveal .quote-block {
+        font-style: italic;
+        font-size: 1.1em;
+        color: #12355b;
+        border-left: 5px solid #68a9e0;
+        padding: 16px 22px;
+        margin: 20px 0;
+        background: #f5faff;
+        border-radius: 0 10px 10px 0;
+      }
+      .reveal .pill-list {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 10px 0 16px;
+      }
+      .reveal .pill-list .pill {
+        background: #eef6ff;
+        border: 1px solid #cfe2f7;
+        color: #0b3f6f;
+        padding: 6px 12px;
+        border-radius: 999px;
+        font-size: 0.72em;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+
+        <!-- ============================================================ -->
+        <!-- TITLE                                                        -->
+        <!-- ============================================================ -->
+
+        <section class="title-slide">
+          <div class="tag tag-alt">DS Journal Club · 28 May 2026</div>
+          <h2>Learning to Order</h2>
+          <p style="font-size: 0.85em; color: #4a5568; margin-top: -6px;">
+            GNN-Based Deep Reinforcement Learning Policies<br>
+            for Autoregressive Graph Models
+          </p>
+          <p style="margin-top: 28px;">Alysson Amaral da Silva &middot; André Luís Vignatti</p>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- BLOCK 1 — Motivation (condensed)                             -->
+        <!-- ============================================================ -->
+
+        <section>
+          <div class="tag">Block 1 · Why this paper</div>
+          <h3>Graph generation in one slide</h3>
+          <p>
+            Learn a distribution \(p(G)\) over graphs and sample new ones that preserve the
+            properties of the training data.
+          </p>
+          <div class="pill-list">
+            <span class="pill">Molecules</span>
+            <span class="pill">Social networks</span>
+            <span class="pill">Knowledge graphs</span>
+            <span class="pill">Circuits</span>
+            <span class="pill">Biological interactions</span>
+          </div>
+          <div class="box">
+            <strong>Autoregressive generators</strong> (DGMG, GraphRNN, GRAN, GraphGPT, G2PT&hellip;) build a graph
+            <em>step by step</em>, one node/edge decision at a time.
+          </div>
+          <p class="small muted">
+            We focus on <strong>DGMG</strong> as a controlled environment, but the framing is generator-agnostic.
+          </p>
+        </section>
+
+        <section>
+          <div class="tag">Block 1 · Why this paper</div>
+          <h3>The catch: graphs are unordered, sequences are not</h3>
+          <div class="two-col">
+            <div>
+              <ul class="small">
+                <li>A graph with \(n\) nodes has up to \(n!\) equivalent label permutations.</li>
+                <li>An autoregressive model must factorize a chosen <strong>sequence</strong> of actions.</li>
+                <li>So we pick a node ordering \(\sigma\) and translate \((G,\sigma)\) into actions
+                  <em>AddNode, AddEdge, ChooseDest, StopEdge, StopNode</em>.</li>
+                <li>Different \(\sigma\) &Rarr; different action sequences &Rarr; different supervised
+                  problems for the very same graph.</li>
+              </ul>
+            </div>
+            <div>
+              <div class="formula">
+                \[
+                  p_\phi(G) = \sum_{\sigma \in \mathcal{O}_G} p_\phi(G \mid \sigma)\, p(\sigma)
+                \]
+              </div>
+              <p class="small muted">
+                Marginalizing over all orderings is intractable (factorial).
+                In practice generators <em>fix</em> a heuristic \(\sigma\) and treat it as canonical.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section class="centered">
+          <div class="tag tag-alt">Central question</div>
+          <div class="quote-block">
+            "Is node ordering a neutral preprocessing detail,<br>
+            or a modeling choice we should be <strong>optimizing</strong>?"
+          </div>
+          <p class="muted" style="margin-top: 18px;">
+            Claim: ordering is a first-class modeling variable, learn it.
+          </p>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- BLOCK 2 — Deterministic orderings (condensed)                -->
+        <!-- ============================================================ -->
+
+        <section>
+          <div class="tag">Block 2 · Background</div>
+          <h3>Deterministic orderings we benchmark against</h3>
+          <div class="pill-list">
+            <span class="pill">Degree</span>
+            <span class="pill">BFS</span>
+            <span class="pill">DFS</span>
+            <span class="pill">Degeneracy</span>
+            <span class="pill">LexBFS</span>
+            <span class="pill">MCS</span>
+            <span class="pill">Spectral</span>
+            <span class="pill">Random</span>
+          </div>
+          <p class="small">
+            Same DGMG architecture, same data, same protocol &mdash; only the graph&rarr;sequence
+            ordering changes. This isolates the effect of \(\sigma\) on the generator.
+          </p>
+        </section>
+
+        <section>
+          <h3>Empirical lesson: no universal winner</h3>
+          <table class="result-table">
+            <thead>
+              <tr>
+                <th>Topology</th>
+                <th>Best ordering</th>
+                <th>Intuition</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Cycles</td>
+                <td class="highlight">DFS / LexBFS</td>
+                <td>Path-like traversal + clean ring closure</td>
+              </tr>
+              <tr>
+                <td>Trees</td>
+                <td class="highlight">BFS</td>
+                <td>Parent&ndash;child locality on the expansion frontier</td>
+              </tr>
+              <tr>
+                <td>Stars</td>
+                <td class="highlight">Degree</td>
+                <td>Inserting the hub first trivializes every later decision</td>
+              </tr>
+              <tr>
+                <td>Barab&aacute;si&ndash;Albert</td>
+                <td class="highlight">None dominates</td>
+                <td>Trade-offs across size, connectivity, hub structure</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="box-accent">
+            On BA, no fixed heuristic wins valid-size <em>and</em> connectivity <em>and</em> hub structure at the same time.
+          </div>
+          <p class="muted">This is the gap the paper attacks.</p>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- BLOCK 3 — Main contribution: RL ordering                     -->
+        <!-- ============================================================ -->
+
+        <section class="centered">
+          <div class="tag">Block 3 · Main contribution</div>
+          <h3 style="margin-top: 12px;">Idea</h3>
+          <div class="quote-block" style="max-width: 880px; margin: 22px auto;">
+            "Replace the hand-crafted ordering with a <strong>graph-conditioned policy</strong>
+            trained by reinforcement learning, where the reward is the quality of the
+            graphs produced by the downstream generator."
+          </div>
+          <p class="muted">
+            Concretely: an attention-based GNN scores nodes; we pick them one at a time;
+            DGMG trains on the induced sequences; REINFORCE updates the policy.
+          </p>
+        </section>
+
+        <section>
+          <div class="tag">Block 3 · Main contribution</div>
+          <h3>Node ordering as a Markov Decision Process</h3>
+          <div class="two-col">
+            <div>
+              <ul class="small">
+                <li><strong>State</strong> \(s_t = (G, S_t)\): fixed graph + nodes already chosen.</li>
+                <li><strong>Action</strong>: pick \(u_t \in V \setminus S_t\).</li>
+                <li><strong>Transition</strong>: deterministic, \(S_{t+1} = S_t \cup \{u_t\}\).</li>
+                <li><strong>Episode</strong>: ends when \(|S_t| = n\), yielding a full permutation \(\sigma\).</li>
+                <li><strong>Reward</strong>: delayed, computed only after DGMG is trained on \(\sigma\).</li>
+              </ul>
+            </div>
+            <div>
+              <div class="formula">
+                \[
+                  \pi_\theta(\sigma \mid G) = \prod_{t=1}^{n} \pi_\theta(u_t \mid G, S_t)
+                \]
+              </div>
+              <p class="small muted">
+                Episodic, \(\gamma = 1\). Permutation built one node at a time, conditioned on the whole graph.
+              </p>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <div class="tag">Block 3 · Main contribution</div>
+          <h3>Bilevel objective</h3>
+          <div class="two-col">
+            <div class="box">
+              <strong>Lower level &mdash; generator</strong>
+              <p class="small">
+                Train DGMG parameters \(\phi\) on sequences induced by orderings sampled from the policy.
+              </p>
+              <div class="formula" style="font-size: 0.78em;">
+                \[
+                  \phi^\star(\theta) = \arg\min_\phi
+                  \mathbb{E}_{G \sim \mathcal{D}}\,
+                  \mathbb{E}_{\sigma \sim \pi_\theta}
+                  [\mathcal{L}_{\text{train}}(\phi, \mathcal{T}(G,\sigma))]
+                \]
+              </div>
+            </div>
+            <div class="box" style="border-color: #68a9e0;">
+              <strong>Upper level &mdash; policy</strong>
+              <p class="small">
+                Maximize downstream reward at the current generator equilibrium.
+              </p>
+              <div class="formula" style="font-size: 0.78em;">
+                \[
+                  \theta^\star = \arg\max_\theta
+                  \mathbb{E}_{G \sim \mathcal{D}}\,
+                  \mathbb{E}_{\sigma \sim \pi_\theta}
+                  [R(G, \sigma, \phi^\star(\theta))]
+                \]
+              </div>
+            </div>
+          </div>
+          <p class="small muted">
+            Solving the inner problem exactly is too expensive &mdash; we alternate stochastic updates instead.
+          </p>
+        </section>
+
+        <section>
+          <div class="tag">Block 3 · Main contribution</div>
+          <h3>Composite reward: NLL is not enough</h3>
+          <div class="formula">
+            \[
+              R(\tau) = R_{\text{pred}}(\tau) + \lambda\, R_{\text{struct}}(\tau)
+            \]
+          </div>
+          <ul class="small">
+            <li><strong>\(R_{\text{pred}}\)</strong>: negative validation NLL of DGMG &mdash; "is this ordering easy to model?"</li>
+            <li><strong>\(R_{\text{struct}}\)</strong>: family-specific validity on samples &mdash; "do the generated graphs look right?"</li>
+            <li>For BA: \(R_{\text{struct}}(\tau) = \text{valid\_size\_ratio} \cdot \text{connected\_ratio}\).</li>
+            <li><strong>\(\lambda\)</strong>: trade-off between likelihood fit and structural fidelity.</li>
+          </ul>
+          <p class="small muted">
+            Without the structural term the policy could find orderings with low NLL that still produce
+            structurally broken graphs (small, disconnected, no hubs).
+          </p>
+        </section>
+
+        <section>
+          <div class="tag">Block 3 · Main contribution</div>
+          <h3>Policy architecture</h3>
+          <div class="step-flow">
+            <span class="step">Graph encoder (GNN)</span>
+            <span class="arrow">&rarr;</span>
+            <span class="step">Selection mask \(m_v^{(t)}\)</span>
+            <span class="arrow">&rarr;</span>
+            <span class="step">Global readout \(h_G\)</span>
+            <span class="arrow">&rarr;</span>
+            <span class="step">MLP score \(z_v^{(t)}\)</span>
+            <span class="arrow">&rarr;</span>
+            <span class="step">Masked softmax</span>
+          </div>
+          <div class="formula" style="font-size: 0.82em;">
+            \[
+              \pi_\theta(u_t = v \mid s_t) =
+              \frac{\exp(z_v^{(t)})}{\sum_{u \in V \setminus S_t} \exp(z_u^{(t)})}
+            \]
+          </div>
+          <ul class="small">
+            <li>Encoder consumes \((G, S_t)\) and per-node features (e.g. normalized degree + selected flag).</li>
+            <li>Already-selected nodes are masked out, so the policy only assigns mass to valid actions.</li>
+            <li>Sampled at training time (exploration), greedy at evaluation time.</li>
+          </ul>
+        </section>
+
+        <section>
+          <div class="tag">Block 3 · Main contribution</div>
+          <h3>Two GNN variants for the policy</h3>
+          <div class="two-col">
+            <div class="box">
+              <strong>GCN RL ordering</strong>
+              <ul class="small">
+                <li>Encoder: GCN, fixed neighbor aggregation.</li>
+                <li>2 message-passing rounds, small hidden dim.</li>
+                <li>Random initial policy trajectory.</li>
+                <li>Proves the framework is feasible.</li>
+              </ul>
+            </div>
+            <div class="box" style="border-color: #68a9e0;">
+              <strong>Attention RL ordering <em>(this paper)</em></strong>
+              <ul class="small">
+                <li>Encoder: transformer-style <strong>attention</strong> over nodes.</li>
+                <li><strong>3</strong> graph layers &mdash; larger receptive field.</li>
+                <li><strong>Warm start</strong> from the <em>Degree</em> ordering at iteration 1.</li>
+                <li>RL <em>refines</em> the hub-aware prior, not relearns it.</li>
+              </ul>
+            </div>
+          </div>
+          <p class="small muted">
+            Same MDP, same reward, same alternating loop &mdash; only the policy network and its warm start change.
+          </p>
+        </section>
+
+        <section>
+          <div class="tag">Block 3 · Main contribution</div>
+          <h3>Policy gradient (REINFORCE) with baseline</h3>
+          <div class="formula">
+            \[
+              \nabla_\theta J(\theta) =
+              \mathbb{E}_{G \sim \mathcal{D}}\,
+              \mathbb{E}_{\sigma \sim \pi_\theta}
+              \!\left[
+                \left(\sum_{t=1}^{n}\nabla_\theta \log \pi_\theta(u_t \mid s_t)\right)
+                \bigl(R(G,\sigma,\phi) - b(G)\bigr)
+              \right]
+            \]
+          </div>
+          <ul class="small">
+            <li>Discrete actions + non-differentiable reward (we have to <em>train</em> DGMG to evaluate \(\sigma\)).</li>
+            <li>Score-function estimator &mdash; no backprop through the generator.</li>
+            <li>Baseline \(b(G)\) reduces variance; optional entropy bonus \(\beta\,H[\pi_\theta]\) keeps exploration alive.</li>
+          </ul>
+        </section>
+
+        <section>
+          <div class="tag">Block 3 · Main contribution</div>
+          <h3>Alternating optimization loop</h3>
+          <div class="step-flow">
+            <span class="step">Sample \(\sigma \sim \pi_\theta\)</span>
+            <span class="arrow">&rarr;</span>
+            <span class="step">Translate \(\mathcal{T}(G,\sigma)\)</span>
+            <span class="arrow">&rarr;</span>
+            <span class="step">Train DGMG \(\phi\)</span>
+            <span class="arrow">&rarr;</span>
+            <span class="step">Evaluate \(R(\tau)\)</span>
+            <span class="arrow">&rarr;</span>
+            <span class="step">REINFORCE update \(\theta\)</span>
+          </div>
+          <div style="text-align:center; margin: 6px 0 14px;">
+            <span class="arrow" style="font-size: 1.5em;">&#x21ba;</span>
+            <span class="small muted">repeat for \(I\) outer iterations, \(K\) policy steps each</span>
+          </div>
+          <ul class="small">
+            <li>Iteration 1 (Attention RL): serialize with <em>Degree</em> &mdash; informative starting point.</li>
+            <li>Iterations \(>1\): the current policy proposes \(\sigma\) for every training graph.</li>
+            <li>Policy and generator <strong>co-adapt</strong>: better \(\sigma\) shapes a better \(\phi\), and vice versa.</li>
+          </ul>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- BLOCK 4 — Results                                            -->
+        <!-- ============================================================ -->
+
+        <section>
+          <div class="tag">Block 4 · Experiments</div>
+          <h3>Experimental setup (Barab&aacute;si&ndash;Albert)</h3>
+          <div class="two-col">
+            <div>
+              <p><strong>Why BA?</strong></p>
+              <ul class="small">
+                <li>Sparse, scale-free, heavy-tailed degree distribution.</li>
+                <li>A "good" ordering must balance size, connectivity, <em>and</em> hub structure.</li>
+                <li>Common stress test in the graph-generation literature.</li>
+              </ul>
+              <p><strong>Dataset</strong></p>
+              <ul class="small">
+                <li>6000 train / 750 val / 750 test BA graphs</li>
+                <li>\(m_{BA} = 2\), \(N \in [20, 60]\)</li>
+              </ul>
+            </div>
+            <div>
+              <p><strong>Metrics</strong></p>
+              <ul class="small">
+                <li><strong>valid-size ratio</strong> &mdash; fraction with size in the training interval</li>
+                <li><strong>connected ratio</strong> &mdash; fraction of fully connected samples</li>
+                <li><strong>degree Gini</strong> &mdash; inequality of the degree distribution</li>
+                <li><strong>hubiness</strong> &mdash; concentration of mass on top-degree nodes</li>
+                <li><strong>validation NLL</strong> &mdash; monitored for convergence/stopping</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <div class="tag">Block 4 · Experiments</div>
+          <h3>Main results (Table 1 in the paper)</h3>
+          <table class="result-table" style="font-size: 0.62em;">
+            <thead>
+              <tr>
+                <th>Ordering</th>
+                <th>Avg. size</th>
+                <th>Valid size</th>
+                <th>Connected</th>
+                <th>Degree Gini</th>
+                <th>Hubiness</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>BFS</td><td>27.31</td><td>0.8130</td><td><strong>1.0000</strong></td><td>0.2923</td><td>0.4282</td></tr>
+              <tr><td>Degeneracy</td><td>37.08</td><td>0.9670</td><td>0.9740</td><td>0.3287</td><td>0.3993</td></tr>
+              <tr><td>MCS</td><td>40.52</td><td>0.9670</td><td>0.9110</td><td>0.3323</td><td>0.3886</td></tr>
+              <tr><td>DFS</td><td>40.87</td><td>0.9630</td><td>0.8280</td><td>0.3411</td><td>0.4202</td></tr>
+              <tr><td>Random</td><td>46.21</td><td>0.9940</td><td>0.7930</td><td>0.3328</td><td>0.3460</td></tr>
+              <tr><td>Degree</td><td>50.37</td><td><strong>1.0000</strong></td><td>0.6490</td><td><strong>0.3516</strong></td><td>0.3326</td></tr>
+              <tr><td>Spectral</td><td>48.42</td><td>0.9910</td><td>0.6010</td><td>0.3184</td><td>0.3085</td></tr>
+              <tr><td>LexBFS</td><td>50.26</td><td>0.9540</td><td>0.4910</td><td>0.3358</td><td>0.3237</td></tr>
+              <tr><td>GCN RL ordering</td><td>39.32</td><td><strong>1.0000</strong></td><td>0.6334</td><td>0.3272</td><td>0.3443</td></tr>
+              <tr class="highlight"><td><strong>Attention RL ordering</strong></td><td><strong>41.41</strong></td><td><strong>1.0000</strong></td><td><strong>0.9960</strong></td><td>0.3081</td><td>0.3855</td></tr>
+            </tbody>
+          </table>
+          <p class="small muted" style="margin-top: 8px;">
+            Attention RL is the only method that simultaneously hits perfect valid-size, near-perfect connectivity,
+            realistic graph size, and competitive hub structure.
+          </p>
+        </section>
+
+        <section>
+          <div class="tag">Block 4 · Experiments</div>
+          <h3>Two head-to-heads worth staring at</h3>
+          <div class="two-col">
+            <div class="box">
+              <strong>Attention RL vs. BFS</strong>
+              <ul class="small">
+                <li>Both reach ~1.0 connectivity.</li>
+                <li>BFS collapses average size to 27.3 (below training range).</li>
+                <li>Attention RL keeps size at 41.4 &mdash; well inside the BA distribution.</li>
+              </ul>
+            </div>
+            <div class="box" style="border-color: #68a9e0;">
+              <strong>Attention RL vs. Degree (its warm start)</strong>
+              <ul class="small">
+                <li>Same perfect valid-size ratio.</li>
+                <li>Connectivity: 0.6490 &rarr; <strong>0.9960</strong>.</li>
+                <li>Hubiness: 0.3326 &rarr; <strong>0.3855</strong>.</li>
+                <li>RL does <em>not</em> just memorize Degree; it refines it.</li>
+              </ul>
+            </div>
+          </div>
+          <div class="box-accent">
+            The learned policy combines strengths of multiple heuristics &mdash;
+            <em>per graph</em>, conditioned on topology.
+          </div>
+        </section>
+
+        <section>
+          <div class="tag">Block 4 · Experiments</div>
+          <h3>Training dynamics</h3>
+          <div class="two-col-compact">
+            <div>
+              <ul class="small">
+                <li>Loss is <strong>oscillatory</strong> &mdash; expected from an alternating RL&ndash;DGMG loop.</li>
+                <li>Best validation checkpoint at <strong>outer iteration 61</strong>: the policy keeps exploring instead of collapsing early.</li>
+                <li>The stronger encoder + warm start let optimization survive a much longer horizon than the GCN variant.</li>
+                <li>Convergence criterion: difference between consecutive validation losses across outer iterations.</li>
+              </ul>
+            </div>
+            <div>
+              <img class="clean"
+                src="../dissertacao_alysson/figures/loss_output_new_run.png"
+                alt="Loss evolution across outer iterations (Attention RL)"
+                style="max-height: 380px; width: 100%; object-fit: contain;" />
+            </div>
+          </div>
+        </section>
+
+        <!-- ============================================================ -->
+        <!-- BLOCK 5 — Discussion                                         -->
+        <!-- ============================================================ -->
+
+        <section>
+          <div class="tag">Block 5 · Takeaways</div>
+          <h3>What I want you to remember</h3>
+          <ul class="numbered-list">
+            <li>
+              <strong>Ordering is a modeling choice, not preprocessing.</strong>
+              For autoregressive graph generators, \(\sigma\) decides the supervised problem.
+            </li>
+            <li>
+              <strong>No fixed heuristic dominates on BA.</strong>
+              You pay for size, connectivity, or hubs &mdash; pick two.
+            </li>
+            <li>
+              <strong>Attention RL ordering closes the gap.</strong>
+              Same MDP framing as GCN RL, but a stronger encoder + warm start lifts connectivity from
+              0.63 to 1.0 with no loss elsewhere.
+            </li>
+            <li>
+              <strong>Generator-agnostic recipe.</strong>
+              Demonstrated on DGMG, but applies to any autoregressive graph model that needs a node order.
+            </li>
+          </ul>
+        </section>
+
+        <section>
+          <div class="tag">Block 5 · Takeaways</div>
+          <h3>Limitations and what's next</h3>
+          <div class="two-col">
+            <div>
+              <p><strong>Limitations</strong></p>
+              <ul class="small">
+                <li>Evaluated on synthetic BA graphs only.</li>
+                <li>Outer loop is expensive &mdash; each RL update trains DGMG.</li>
+                <li>REINFORCE has high variance even with baseline.</li>
+                <li>Reward design is BA-specific; needs to be re-engineered per family.</li>
+              </ul>
+            </div>
+            <div>
+              <p><strong>Future work</strong></p>
+              <ul class="small">
+                <li>Real datasets: molecules, biological networks, knowledge graphs.</li>
+                <li>Variance reduction: actor-critic, importance sampling, GRPO-style estimators.</li>
+                <li>Interpretability of the learned ordering &mdash; what does the policy actually do?</li>
+                <li>Plug into other generators (GraphRNN, GraphGPT, G2PT&hellip;).</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+
+        <section class="centered">
+          <h2>Thanks &mdash; discussion?</h2>
+          <div class="quote-block" style="margin: 28px auto; max-width: 900px;">
+            "Node ordering is not neutral preprocessing &mdash; it is part of the model.<br>
+            Treat it as an optimization target and you generate better graphs."
+          </div>
+          <p class="small muted">
+            Paper code: <code>github.com/prunebr/learning_to_order</code><br>
+            Questions, criticism, "have you tried&hellip;" all welcome.
+          </p>
+        </section>
+
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/math/math.js"></script>
+    <script>
+      Reveal.initialize({
+        hash: true,
+        slideNumber: true,
+        transition: "slide",
+        width: 1366,
+        height: 768,
+        margin: 0.06,
+        plugins: [RevealMath.MathJax3],
+        mathjax3: {
+          tex: {
+            inlineMath: [["\\(", "\\)"]],
+            displayMath: [["\\[", "\\]"]]
+          }
+        }
+      });
+    </script>
+  </body>
+</html>
